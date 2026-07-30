@@ -42,7 +42,15 @@ class DatabaseHelper {
     Database database,
     int version,
   ) async {
-    // テーブル作成処理は次回以降に追加する。
+    await database.execute('''
+      CREATE TABLE projects (
+        project_id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> close() async {

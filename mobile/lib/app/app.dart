@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../screens/home_screen.dart';
+
 class PamsCompanionApp extends StatelessWidget {
   const PamsCompanionApp({super.key});
 
@@ -8,20 +10,13 @@ class PamsCompanionApp extends StatelessWidget {
     return MaterialApp(
       title: 'PAMS Companion',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('PAMS Companion'),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
         ),
-        body: const Center(
-          child: Text(
-            'PAMS Companion',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        useMaterial3: true,
       ),
+      home: const HomeScreen(),
     );
   }
 }

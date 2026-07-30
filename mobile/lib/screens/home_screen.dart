@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
 
+import 'ai_chat_screen.dart';
+import 'answer_review_screen.dart';
+import 'memory_screen.dart';
+import 'project_screen.dart';
+import 'settings_screen.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _openScreen(BuildContext context, Widget screen) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => screen,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,31 +42,41 @@ class HomeScreen extends StatelessWidget {
               _HomeMenuButton(
                 label: 'AIに相談する',
                 icon: Icons.chat_bubble_outline,
-                onPressed: () {},
+                onPressed: () {
+                  _openScreen(context, const AiChatScreen());
+                },
               ),
               const SizedBox(height: 16),
               _HomeMenuButton(
                 label: 'AIの回答を整理する',
                 icon: Icons.fact_check_outlined,
-                onPressed: () {},
+                onPressed: () {
+                  _openScreen(context, const AnswerReviewScreen());
+                },
               ),
               const SizedBox(height: 16),
               _HomeMenuButton(
                 label: '今日の記憶',
                 icon: Icons.lightbulb_outline,
-                onPressed: () {},
+                onPressed: () {
+                  _openScreen(context, const MemoryScreen());
+                },
               ),
               const SizedBox(height: 16),
               _HomeMenuButton(
                 label: 'プロジェクト',
                 icon: Icons.folder_outlined,
-                onPressed: () {},
+                onPressed: () {
+                  _openScreen(context, const ProjectScreen());
+                },
               ),
               const SizedBox(height: 16),
               _HomeMenuButton(
                 label: '設定',
                 icon: Icons.settings_outlined,
-                onPressed: () {},
+                onPressed: () {
+                  _openScreen(context, const SettingsScreen());
+                },
               ),
             ],
           ),

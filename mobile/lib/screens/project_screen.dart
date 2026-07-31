@@ -1,7 +1,25 @@
 import 'package:flutter/material.dart';
 
-class ProjectScreen extends StatelessWidget {
+import '../models/project.dart';
+import '../repositories/project_repository.dart';
+
+class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
+
+  @override
+  State<ProjectScreen> createState() => _ProjectScreenState();
+}
+
+class _ProjectScreenState extends State<ProjectScreen> {
+  final ProjectRepository _projectRepository = ProjectRepository();
+
+  late Future<List<Project>> _projects;
+
+  @override
+  void initState() {
+    super.initState();
+    _projects = _projectRepository.findAll();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,12 +27,51 @@ class ProjectScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('プロジェクト'),
       ),
-      body: const Center(
-        child: Text(
-          'プロジェクト画面\n\n準備中',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 22),
-        ),
+      body: FutureBuilder<List<Project>>(
+        future: _projects,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('プロジェクトを読み込めませんでした。'),
+            );
+          }
+
+          final projects = snapshot.data ?? [];
+
+          if (projects.isEmpty) {
+            return const Center(
+              child: Text(
+                'プロジェクトはありません。',
+                style: TextStyle(fontSize: 18),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: projects.length,
+            separatorBuilder: (context, index) {
+              return const Divider();
+            },
+            itemBuilder: (context, index) {
+              final project = projects[index];
+
+              return ListTile(
+                leading: const Icon(Icons.folder_outlined),
+                title: Text(project.name),
+                subtitle: project.description.isEmpty
+                    ? null
+                    : Text(project.description),
+              );
+            },
+          );
+        },
       ),
     );
   }

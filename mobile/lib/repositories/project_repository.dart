@@ -19,12 +19,18 @@ class ProjectRepository {
     );
   }
 
-  Future<List<Map<String, Object?>>> findAll() async {
+  Future<List<Project>> findAll() async {
     final database = await _databaseHelper.database;
 
-    return database.query(
+    final maps = await database.query(
       'projects',
-      orderBy: 'created_at',
+      orderBy: 'created_at DESC',
     );
+
+    return maps
+        .map(
+          Project.fromMap,
+        )
+        .toList();
   }
 }

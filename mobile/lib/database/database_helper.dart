@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   Database? _database;
 
@@ -34,14 +34,35 @@ class DatabaseHelper {
     return openDatabase(
       databasePath,
       version: databaseVersion,
+      onConfigure: _onConfigure,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onConfigure(Database database) async {
+    await database.execute('PRAGMA foreign_keys = ON');
   }
 
   Future<void> _onCreate(
     Database database,
     int version,
   ) async {
+    await _createProjectsTable(database);
+    await _createAiSessionsTable(database);
+  }
+
+  Future<void> _onUpgrade(
+    Database database,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
+      await _createAiSessionsTable(database);
+    }
+  }
+
+  Future<void> _createProjectsTable(Database database) async {
     await database.execute('''
       CREATE TABLE projects (
         project_id TEXT PRIMARY KEY,
@@ -49,6 +70,21 @@ class DatabaseHelper {
         description TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _createAiSessionsTable(Database database) async {
+    await database.execute('''
+      CREATE TABLE ai_sessions (
+        session_id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (project_id)
+          REFERENCES projects (project_id)
+          ON DELETE CASCADE
       )
     ''');
   }

@@ -34,6 +34,16 @@ class ProjectRepository {
     );
   }
 
+  Future<void> delete(String projectId) async {
+    final database = await _databaseHelper.database;
+
+    await database.delete(
+      'projects',
+      where: 'project_id = ?',
+      whereArgs: [projectId],
+    );
+  }
+
   Future<List<Project>> findAll() async {
     final database = await _databaseHelper.database;
 

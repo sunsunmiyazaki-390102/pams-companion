@@ -125,6 +125,61 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
                   ),
                 ),
               ),
+            
+              if (widget.project != null) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                  
+                    onPressed: () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('確認'),
+                            content: const Text(
+                              'このプロジェクトを削除しますか？',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
+                                },
+                                child: const Text('キャンセル'),
+                              ),
+                              FilledButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                                child: const Text('削除'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (result != true) {
+                        return;
+                      }
+
+                      await _projectRepository.delete(widget.project!.projectId);
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      Navigator.of(context).pop(true);
+
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text(
+                      '削除',
+                      style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+              ],
             ],
           ),
         ),

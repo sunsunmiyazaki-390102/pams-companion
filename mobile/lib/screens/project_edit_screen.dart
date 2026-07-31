@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/project.dart';
+import '../repositories/project_repository.dart';
 
 class ProjectEditScreen extends StatefulWidget {
   const ProjectEditScreen({super.key});
@@ -11,6 +13,8 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController =
       TextEditingController();
+
+  final ProjectRepository _projectRepository = ProjectRepository();
 
   @override
   void dispose() {
@@ -57,13 +61,37 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
               SizedBox(
                 height: 52,
                 child: FilledButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('保存機能は次回実装します。'),
-                      ),
+                  onPressed: () async {
+                    final name = _nameController.text.trim();
+                    final description = _descriptionController.text.trim();
+
+                    if (name.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('プロジェクト名を入力してください。'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final now = DateTime.now();
+
+                    final project = Project(
+                      projectId: now.microsecondsSinceEpoch.toString(),
+                      name: name,
+                      description: description,
+                      createdAt: now,
+                      updatedAt: now,
                     );
-                  },
+
+                    await _projectRepository.insert(project);
+
+                    if (!context.mounted) {
+                      return;
+                    }
+
+                    Navigator.of(context).pop(true);
+                  },                 
                   icon: const Icon(Icons.save_outlined),
                   label: const Text(
                     '保存',

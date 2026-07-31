@@ -22,6 +22,12 @@ class _ProjectScreenState extends State<ProjectScreen> {
     _projects = _projectRepository.findAll();
   }
 
+  void _reloadProjects() {
+    setState(() {
+      _projects = _projectRepository.findAll();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,15 +81,19 @@ class _ProjectScreenState extends State<ProjectScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
+        onPressed: () async {
+          final wasSaved = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
               builder: (context) => const ProjectEditScreen(),
             ),
           );
+
+          if (wasSaved == true) {
+            _reloadProjects();
+          }
         },
         child: const Icon(Icons.add),
-      ),      
+      ),
     );
   }
 }

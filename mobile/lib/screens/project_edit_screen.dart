@@ -3,7 +3,12 @@ import '../models/project.dart';
 import '../repositories/project_repository.dart';
 
 class ProjectEditScreen extends StatefulWidget {
-  const ProjectEditScreen({super.key});
+  const ProjectEditScreen({
+    super.key,
+    this.project,
+  });
+
+  final Project? project;
 
   @override
   State<ProjectEditScreen> createState() => _ProjectEditScreenState();
@@ -17,6 +22,18 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
   final ProjectRepository _projectRepository = ProjectRepository();
 
   @override
+  void initState() {
+    super.initState();
+
+    final project = widget.project;
+
+    if (project != null) {
+      _nameController.text = project.name;
+      _descriptionController.text = project.description;
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
@@ -27,8 +44,10 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('プロジェクト追加'),
-      ),
+        title: Text(
+          widget.project == null ? 'プロジェクト追加' : 'プロジェクト編集',
+        ),
+      ),     
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -74,23 +93,30 @@ class _ProjectEditScreenState extends State<ProjectEditScreen> {
                       return;
                     }
 
+                    final existingProject = widget.project;
                     final now = DateTime.now();
 
                     final project = Project(
-                      projectId: now.microsecondsSinceEpoch.toString(),
+                      projectId: existingProject?.projectId ??
+                          now.microsecondsSinceEpoch.toString(),
                       name: name,
                       description: description,
-                      createdAt: now,
+                      createdAt: existingProject?.createdAt ?? now,
                       updatedAt: now,
                     );
 
-                    await _projectRepository.insert(project);
+                    if (existingProject == null) {
+                      await _projectRepository.insert(project);
+                    } else {
+                      await _projectRepository.update(project);
+                    }
 
                     if (!context.mounted) {
                       return;
                     }
 
-                    Navigator.of(context).pop(true);
+                    Navigator.of(context).pop(true);                  
+                  
                   },                 
                   icon: const Icon(Icons.save_outlined),
                   label: const Text(

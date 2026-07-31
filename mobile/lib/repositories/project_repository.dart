@@ -19,6 +19,21 @@ class ProjectRepository {
     );
   }
 
+  Future<void> update(Project project) async {
+    final database = await _databaseHelper.database;
+
+    await database.update(
+      'projects',
+      {
+        'name': project.name,
+        'description': project.description,
+        'updated_at': project.updatedAt.toIso8601String(),
+      },
+      where: 'project_id = ?',
+      whereArgs: [project.projectId],
+    );
+  }
+
   Future<List<Project>> findAll() async {
     final database = await _databaseHelper.database;
 

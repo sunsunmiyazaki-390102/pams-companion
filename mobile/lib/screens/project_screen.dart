@@ -68,14 +68,26 @@ class _ProjectScreenState extends State<ProjectScreen> {
             },
             itemBuilder: (context, index) {
               final project = projects[index];
-
               return ListTile(
                 leading: const Icon(Icons.folder_outlined),
                 title: Text(project.name),
                 subtitle: project.description.isEmpty
                     ? null
                     : Text(project.description),
-              );
+                onTap: () async {
+                  final wasSaved = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (context) => ProjectEditScreen(
+                        project: project,
+                      ),
+                    ),
+                  );
+
+                  if (wasSaved == true) {
+                    _reloadProjects();
+                  }
+                },
+              );            
             },
           );
         },

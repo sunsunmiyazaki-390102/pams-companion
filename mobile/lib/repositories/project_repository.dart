@@ -1,11 +1,30 @@
+import '../database/database_helper.dart';
 import '../models/project.dart';
 
-abstract class ProjectRepository {
-  Future<List<Project>> getProjects();
+class ProjectRepository {
+  final _databaseHelper = DatabaseHelper.instance;
 
-  Future<Project?> getProject(String projectId);
+  Future<void> insert(Project project) async {
+    final database = await _databaseHelper.database;
 
-  Future<void> saveProject(Project project);
+    await database.insert(
+      'projects',
+      {
+        'project_id': project.projectId,
+        'name': project.name,
+        'description': project.description,
+        'created_at': project.createdAt.toIso8601String(),
+        'updated_at': project.updatedAt.toIso8601String(),
+      },
+    );
+  }
 
-  Future<void> deleteProject(String projectId);
+  Future<List<Map<String, Object?>>> findAll() async {
+    final database = await _databaseHelper.database;
+
+    return database.query(
+      'projects',
+      orderBy: 'created_at',
+    );
+  }
 }

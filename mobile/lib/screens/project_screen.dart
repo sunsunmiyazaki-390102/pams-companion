@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/project.dart';
 import '../repositories/project_repository.dart';
+import 'project_edit_screen.dart';
 
 class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
@@ -73,6 +74,16 @@ class _ProjectScreenState extends State<ProjectScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => const ProjectEditScreen(),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),      
     );
   }
 }

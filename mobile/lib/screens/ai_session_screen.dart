@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/ai_session.dart';
 import '../models/project.dart';
 import '../repositories/ai_session_repository.dart';
+import 'ai_session_edit_screen.dart';
 
 class AiSessionScreen extends StatefulWidget {
   const AiSessionScreen({
@@ -29,6 +30,14 @@ class _AiSessionScreenState extends State<AiSessionScreen> {
     _sessions = _aiSessionRepository.findByProjectId(
       widget.project.projectId,
     );
+  }
+
+  void _reloadSessions() {
+    setState(() {
+      _sessions = _aiSessionRepository.findByProjectId(
+        widget.project.projectId,
+      );
+    });
   }
 
   @override
@@ -84,6 +93,22 @@ class _AiSessionScreenState extends State<AiSessionScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final wasSaved = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (context) => AiSessionEditScreen(
+                projectId: widget.project.projectId,
+              ),
+            ),
+          );
+
+          if (wasSaved == true) {
+            _reloadSessions();
+          }
+        },
+        child: const Icon(Icons.add),
+      ), 
     );
   }
 }

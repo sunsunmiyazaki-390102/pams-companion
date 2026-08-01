@@ -82,12 +82,25 @@ class _AiSessionScreenState extends State<AiSessionScreen> {
             },
             itemBuilder: (context, index) {
               final session = sessions[index];
-
               return ListTile(
                 leading: const Icon(
                   Icons.chat_bubble_outline,
                 ),
                 title: Text(session.title),
+                onTap: () async {
+                  final wasSaved = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (context) => AiSessionEditScreen(
+                        projectId: widget.project.projectId,
+                        session: session,
+                      ),
+                    ),
+                  );
+
+                  if (wasSaved == true) {
+                    _reloadSessions();
+                  }
+                },
               );
             },
           );

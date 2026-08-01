@@ -6,9 +6,11 @@ class AiSessionEditScreen extends StatefulWidget {
   const AiSessionEditScreen({
     super.key,
     required this.projectId,
+    this.session,
   });
 
   final String projectId;
+  final AiSession? session;
 
   @override
   State<AiSessionEditScreen> createState() =>
@@ -26,7 +28,18 @@ class _AiSessionEditScreenState
 
   final AiSessionRepository _aiSessionRepository =
       AiSessionRepository();
- 
+
+  @override
+  void initState() {
+    super.initState();
+
+    final session = widget.session;
+
+    if (session != null) {
+      _titleController.text = session.title;
+    }
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -38,8 +51,10 @@ class _AiSessionEditScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Session追加'),
-      ),
+        title: Text(
+          widget.session == null ? 'AI Session追加' : 'AI Session編集',
+        ),
+      ),  
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -86,18 +101,25 @@ class _AiSessionEditScreenState
                       return;
                     }
 
+                    final existingSession = widget.session;
+                    
                     final now = DateTime.now();
 
                     final session = AiSession(
-                      sessionId: now.microsecondsSinceEpoch.toString(),
+                      sessionId: existingSession?.sessionId ??
+                          now.microsecondsSinceEpoch.toString(),
                       projectId: widget.projectId,
                       title: title,
-                      createdAt: now,
+                      createdAt: existingSession?.createdAt ?? now,
                       updatedAt: now,
-                    );
-
-                    await _aiSessionRepository.insert(session);
-
+                    );                  
+                  
+                    if (existingSession == null) {
+                      await _aiSessionRepository.insert(session);
+                    } else {
+                      await _aiSessionRepository.update(session);
+                    }                   
+                   
                     if (!context.mounted) {
                       return;
                     }

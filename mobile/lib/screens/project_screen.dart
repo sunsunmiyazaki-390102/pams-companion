@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/project.dart';
 import '../repositories/project_repository.dart';
 import 'project_edit_screen.dart';
+import 'ai_session_screen.dart';
 
 class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
@@ -74,20 +75,33 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 subtitle: project.description.isEmpty
                     ? null
                     : Text(project.description),
-                onTap: () async {
-                  final wasSaved = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute<bool>(
-                      builder: (context) => ProjectEditScreen(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (context) => AiSessionScreen(
                         project: project,
                       ),
                     ),
                   );
-
-                  if (wasSaved == true) {
-                    _reloadProjects();
-                  }
                 },
-              );            
+                trailing: IconButton(
+                  tooltip: '編集',
+                  onPressed: () async {
+                    final wasSaved = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute<bool>(
+                        builder: (context) => ProjectEditScreen(
+                          project: project,
+                        ),
+                      ),
+                    );
+
+                    if (wasSaved == true) {
+                      _reloadProjects();
+                    }
+                  },
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+              );             
             },
           );
         },

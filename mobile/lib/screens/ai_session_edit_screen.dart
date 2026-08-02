@@ -141,6 +141,61 @@ class _AiSessionEditScreenState
                   ),
                 ),
               ),
+              if (widget.session != null) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('確認'),
+                            content: const Text(
+                              'このAI Sessionを削除しますか？',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
+                                },
+                                child: const Text('キャンセル'),
+                              ),
+                              FilledButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                                child: const Text('削除'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (result != true) {
+                        return;
+                      }
+
+                      await _aiSessionRepository.delete(
+                        widget.session!.sessionId,
+                      );
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      Navigator.of(context).pop(true);                     
+                  
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text(
+                      '削除',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+              ],           
             ],
           ),
         ),

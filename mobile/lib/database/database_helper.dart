@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 2;
+  static const int databaseVersion = 3;
 
   Database? _database;
 
@@ -50,6 +50,7 @@ class DatabaseHelper {
   ) async {
     await _createProjectsTable(database);
     await _createAiSessionsTable(database);
+    await _createAiConversationsTable(database);
   }
 
   Future<void> _onUpgrade(
@@ -59,6 +60,10 @@ class DatabaseHelper {
   ) async {
     if (oldVersion < 2) {
       await _createAiSessionsTable(database);
+    }
+
+    if (oldVersion < 3) {
+      await _createAiConversationsTable(database);
     }
   }
 
@@ -86,6 +91,31 @@ class DatabaseHelper {
           REFERENCES projects (project_id)
           ON DELETE CASCADE
       )
+    ''');
+  }
+
+  Future<void> _createAiConversationsTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE ai_conversations (
+        conversation_id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        user_message TEXT NOT NULL,
+        ai_response TEXT NOT NULL,
+        summary TEXT,
+        ai_provider TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (session_id)
+          REFERENCES ai_sessions (session_id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_ai_conversations_session_id
+      ON ai_conversations (session_id)
     ''');
   }
 

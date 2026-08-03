@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/ai_session.dart';
+import 'ai_response_style_screen.dart';
 
 class AiPromptAssistScreen extends StatefulWidget {
   const AiPromptAssistScreen({
@@ -72,7 +73,7 @@ class _AiPromptAssistScreenState
     }
   }
 
-  void _confirmPrompt() {
+  Future<void> _confirmPrompt() async {
     final selectedIndex = _selectedIndex;
 
     if (selectedIndex == null) {
@@ -88,10 +89,13 @@ class _AiPromptAssistScreenState
 
     final selectedPrompt = _promptCandidates[selectedIndex];
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '選択した質問：$selectedPrompt',
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => AiResponseStyleScreen(
+          session: widget.session,
+          purpose: widget.purpose,
+          theme: widget.theme,
+          selectedPrompt: selectedPrompt,
         ),
       ),
     );

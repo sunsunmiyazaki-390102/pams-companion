@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/ai_session.dart';
+import 'ai_prompt_preview_screen.dart';
 
 class AiResponseStyleScreen extends StatefulWidget {
   const AiResponseStyleScreen({
@@ -63,7 +64,7 @@ class _AiResponseStyleScreenState
 
   int? _selectedIndex;
 
-  void _confirmResponseStyle() {
+  Future<void> _confirmResponseStyle() async {
     final selectedIndex = _selectedIndex;
 
     if (selectedIndex == null) {
@@ -79,15 +80,23 @@ class _AiResponseStyleScreenState
 
     final selectedStyle = _responseStyles[selectedIndex];
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '「${selectedStyle['title']}」を選択しました。',
+    final responseStyleTitle = selectedStyle['title']!;
+    final responseInstruction = selectedStyle['instruction']!;
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => AiPromptPreviewScreen(
+          session: widget.session,
+          purpose: widget.purpose,
+          theme: widget.theme,
+          selectedPrompt: widget.selectedPrompt,
+          responseStyleTitle: responseStyleTitle,
+          responseInstruction: responseInstruction,
         ),
       ),
     );
-  }
-
+  } 
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/ai_session.dart';
+import 'ai_prompt_assist_screen.dart';
 
 class AiConversationStartScreen extends StatefulWidget {
   const AiConversationStartScreen({
@@ -37,10 +38,14 @@ class _AiConversationStartScreenState
     super.dispose();
   }
 
-  void _goToNextStep() {
+  Future<void> _goToNextStep() async {
+    // 入力欄のフォーカスを外し、キーボードを閉じる
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final purpose = _selectedPurpose;
     final theme = _themeController.text.trim();
 
-    if (_selectedPurpose == null) {
+    if (purpose == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -62,11 +67,12 @@ class _AiConversationStartScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '「$_selectedPurpose」について、'
-          '「$theme」を一緒に考えます。',
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => AiPromptAssistScreen(
+          session: widget.session,
+          purpose: purpose,
+          theme: theme,
         ),
       ),
     );

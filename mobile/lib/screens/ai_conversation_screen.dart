@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/ai_conversation.dart';
 import '../models/ai_session.dart';
 import '../repositories/ai_conversation_repository.dart';
+import 'ai_conversation_start_screen.dart';
 
 class AiConversationScreen extends StatefulWidget {
   const AiConversationScreen({
@@ -55,16 +56,16 @@ class _AiConversationScreenState
       ),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Conversation追加画面は次のStepで作成します。',
+        onPressed: () async {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (context) => AiConversationStartScreen(
+                session: widget.session,
               ),
             ),
           );
         },
-        tooltip: 'Conversationを追加',
+        tooltip: 'AIとの対話を始める',
         child: const Icon(Icons.add),
       ),
     );

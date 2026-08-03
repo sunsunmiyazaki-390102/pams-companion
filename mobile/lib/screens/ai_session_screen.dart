@@ -4,6 +4,7 @@ import '../models/ai_session.dart';
 import '../models/project.dart';
 import '../repositories/ai_session_repository.dart';
 import 'ai_session_edit_screen.dart';
+import 'ai_conversation_screen.dart';
 
 class AiSessionScreen extends StatefulWidget {
   const AiSessionScreen({
@@ -87,19 +88,32 @@ class _AiSessionScreenState extends State<AiSessionScreen> {
                   Icons.chat_bubble_outline,
                 ),
                 title: Text(session.title),
-                onTap: () async {
-                  final wasSaved = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute<bool>(
-                      builder: (context) => AiSessionEditScreen(
-                        projectId: widget.project.projectId,
+                trailing: IconButton(
+                  tooltip: 'AI Sessionを編集',
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () async {
+                    final wasSaved = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute<bool>(
+                        builder: (context) => AiSessionEditScreen(
+                          projectId: widget.project.projectId,
+                          session: session,
+                        ),
+                      ),
+                    );
+
+                    if (wasSaved == true) {
+                      _reloadSessions();
+                    }
+                  },
+                ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (context) => AiConversationScreen(
                         session: session,
                       ),
                     ),
                   );
-
-                  if (wasSaved == true) {
-                    _reloadSessions();
-                  }
                 },
               );
             },

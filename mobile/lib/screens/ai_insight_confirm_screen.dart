@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/ai_session.dart';
+import '../models/knowledge_asset.dart';
+import '../repositories/knowledge_asset_repository.dart';
 
 class AiInsightConfirmScreen extends StatefulWidget {
   const AiInsightConfirmScreen({
@@ -23,6 +26,13 @@ class _AiInsightConfirmScreenState
     extends State<AiInsightConfirmScreen> {
   late final List<TextEditingController> _controllers;
 
+  final KnowledgeAssetRepository _knowledgeAssetRepository =
+      KnowledgeAssetRepository();
+
+  final Uuid _uuid = const Uuid();
+
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +51,7 @@ class _AiInsightConfirmScreenState
     super.dispose();
   }
 
-  void _confirmInsights() {
+  Future<void> _saveKnowledgeAssets() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
     final confirmedInsights = _controllers
@@ -60,14 +70,60 @@ class _AiInsightConfirmScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${confirmedInsights.length}件のInsightを確認しました。'
-          'SQLite保存は次のStepで実装します。',
+    if (_isSaving) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final now = DateTime.now();
+
+      for (final insight in confirmedInsights) {
+        final asset = KnowledgeAsset(
+          knowledgeId: _uuid.v4(),
+          sessionId: widget.session.sessionId,
+          conversationId: null,
+          content: insight,
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        await _knowledgeAssetRepository.insert(asset);
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${confirmedInsights.length}件の知識資産を保存しました。',
+          ),
         ),
-      ),
-    );
+      );
+
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '知識資産を保存できませんでした。',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -139,13 +195,24 @@ class _AiInsightConfirmScreenState
               SizedBox(
                 height: 52,
                 child: FilledButton.icon(
-                  onPressed: _confirmInsights,
-                  icon: const Icon(
-                    Icons.auto_awesome_outlined,
-                  ),
-                  label: const Text(
-                    '知識資産として保存する',
-                    style: TextStyle(fontSize: 18),
+                  onPressed:
+                      _isSaving ? null : _saveKnowledgeAssets,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.auto_awesome_outlined,
+                        ),
+                  label: Text(
+                    _isSaving
+                        ? '保存しています…'
+                        : '知識資産として保存する',
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ),
               ),

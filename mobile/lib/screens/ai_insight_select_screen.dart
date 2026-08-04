@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/ai_session.dart';
+import 'ai_insight_confirm_screen.dart';
 
 class AiInsightSelectScreen extends StatefulWidget {
   const AiInsightSelectScreen({
@@ -53,11 +54,16 @@ class _AiInsightSelectScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Insightを${_selectedIndexes.length}件選択しました。'
-          '保存処理は次のStepで実装します。',
+    final selectedInsights = _selectedIndexes
+        .map((index) => _insightCandidates[index])
+        .toList();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AiInsightConfirmScreen(
+          session: widget.session,
+          selectedInsights: selectedInsights,
+          aiResponse: widget.aiResponse,
         ),
       ),
     );

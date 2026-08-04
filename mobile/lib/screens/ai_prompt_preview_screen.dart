@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/ai_session.dart';
+import 'ai_response_import_screen.dart';
 
 class AiPromptPreviewScreen extends StatefulWidget {
   const AiPromptPreviewScreen({
@@ -30,11 +32,21 @@ class _AiPromptPreviewScreenState
   final TextEditingController _reasonController =
       TextEditingController();
 
+  final TextEditingController _promptController =
+      TextEditingController();
+
   bool _includeReasonInPrompt = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _promptController.text = _completedPrompt;
+  }
 
   @override
   void dispose() {
     _reasonController.dispose();
+    _promptController.dispose();
     super.dispose();
   }
 
@@ -85,15 +97,64 @@ class _AiPromptPreviewScreenState
     FocusManager.instance.primaryFocus?.unfocus();
 
     setState(() {
-      // 入力内容を反映してプレビューを再構築します。
+      _promptController.text = _completedPrompt;
     });
   }
 
-  void _showNextStepMessage() {
+  Future<void> _copyPrompt() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final prompt = _promptController.text.trim();
+
+    if (prompt.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'コピーするプロンプトがありません。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await Clipboard.setData(
+      ClipboardData(text: prompt),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'クリップボードへのコピーは次のStepで実装します。',
+          'プロンプトをコピーしました。',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openResponseImportScreen() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final completedPrompt = _promptController.text.trim();
+
+    if (completedPrompt.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '先に完成プロンプトを確認してください。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => AiResponseImportScreen(
+          session: widget.session,
+          completedPrompt: completedPrompt,
         ),
       ),
     );
@@ -185,12 +246,15 @@ class _AiPromptPreviewScreenState
                 ],
               ),
               const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SelectableText(
-                    _completedPrompt,
-                  ),
+              TextField(
+                controller: _promptController,
+                minLines: 12,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                  helperText:
+                      '内容を確認し、必要に応じて自由に修正できます。',
                 ),
               ),
               const SizedBox(height: 12),
@@ -202,10 +266,24 @@ class _AiPromptPreviewScreenState
               SizedBox(
                 height: 52,
                 child: FilledButton.icon(
-                  onPressed: _showNextStepMessage,
+                  onPressed: _copyPrompt,
                   icon: const Icon(Icons.copy_outlined),
                   label: const Text(
                     'プロンプトをコピーする',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: _openResponseImportScreen,
+                  icon: const Icon(
+                    Icons.download_outlined,
+                  ),
+                  label: const Text(
+                    'AI回答を取り込む',
                     style: TextStyle(fontSize: 18),
                   ),
                 ),

@@ -86,6 +86,7 @@ class _AiInsightConfirmScreenState
           knowledgeId: _uuid.v4(),
           sessionId: widget.session.sessionId,
           conversationId: null,
+          knowledgeType: 'insight',
           content: insight,
           createdAt: now,
           updatedAt: now,

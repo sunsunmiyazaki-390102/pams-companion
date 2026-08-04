@@ -3,6 +3,7 @@ class KnowledgeAsset {
     required this.knowledgeId,
     required this.sessionId,
     required this.conversationId,
+    required this.knowledgeType,
     required this.content,
     required this.createdAt,
     required this.updatedAt,
@@ -11,6 +12,7 @@ class KnowledgeAsset {
   final String knowledgeId;
   final String sessionId;
   final String? conversationId;
+  final String knowledgeType;
   final String content;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -22,6 +24,8 @@ class KnowledgeAsset {
       knowledgeId: map['knowledge_id'] as String,
       sessionId: map['session_id'] as String,
       conversationId: map['conversation_id'] as String?,
+      knowledgeType:
+          map['knowledge_type'] as String? ?? 'insight',
       content: map['content'] as String,
       createdAt: DateTime.parse(
         map['created_at'] as String,
@@ -37,6 +41,7 @@ class KnowledgeAsset {
       'knowledge_id': knowledgeId,
       'session_id': sessionId,
       'conversation_id': conversationId,
+      'knowledge_type': knowledgeType,
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -48,6 +53,7 @@ class KnowledgeAsset {
     String? sessionId,
     String? conversationId,
     bool clearConversationId = false,
+    String? knowledgeType,
     String? content,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -58,6 +64,8 @@ class KnowledgeAsset {
       conversationId: clearConversationId
           ? null
           : conversationId ?? this.conversationId,
+      knowledgeType:
+          knowledgeType ?? this.knowledgeType,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

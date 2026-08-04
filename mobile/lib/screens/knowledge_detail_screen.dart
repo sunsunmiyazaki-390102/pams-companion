@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 
 import '../models/knowledge_asset.dart';
+import 'knowledge_edit_screen.dart';
 
-class KnowledgeDetailScreen extends StatelessWidget {
+class KnowledgeDetailScreen extends StatefulWidget {
   const KnowledgeDetailScreen({
     super.key,
     required this.asset,
   });
 
   final KnowledgeAsset asset;
+
+  @override
+  State<KnowledgeDetailScreen> createState() =>
+      _KnowledgeDetailScreenState();
+}
+
+class _KnowledgeDetailScreenState
+    extends State<KnowledgeDetailScreen> {
+  late KnowledgeAsset _asset;
+
+  @override
+  void initState() {
+    super.initState();
+    _asset = widget.asset;
+  }
 
   String _formatDateTime(DateTime value) {
     final localValue = value.toLocal();
@@ -22,11 +38,47 @@ class KnowledgeDetailScreen extends StatelessWidget {
     return '$year/$month/$day $hour:$minute';
   }
 
+  Future<void> _openEditScreen() async {
+    final updatedAsset =
+        await Navigator.of(context).push<KnowledgeAsset>(
+      MaterialPageRoute<KnowledgeAsset>(
+        builder: (context) => KnowledgeEditScreen(
+          asset: _asset,
+        ),
+      ),
+    );
+
+    if (updatedAsset == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _asset = updatedAsset;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Knowledgeを更新しました。',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Knowledge詳細'),
+        actions: [
+          IconButton(
+            onPressed: _openEditScreen,
+            tooltip: '編集',
+            icon: const Icon(
+              Icons.edit_outlined,
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -62,39 +114,47 @@ class KnowledgeDetailScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: SelectableText(
-                    asset.content,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge,
+                    _asset.content,
+                    style:
+                        Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
               ),
               const SizedBox(height: 28),
               _DetailRow(
                 label: '作成日時',
-                value: _formatDateTime(asset.createdAt),
+                value: _formatDateTime(_asset.createdAt),
               ),
               const SizedBox(height: 12),
               _DetailRow(
                 label: '更新日時',
-                value: _formatDateTime(asset.updatedAt),
+                value: _formatDateTime(_asset.updatedAt),
               ),
               const SizedBox(height: 12),
               _DetailRow(
                 label: 'Session ID',
-                value: asset.sessionId,
+                value: _asset.sessionId,
               ),
-              if (asset.conversationId != null) ...[
+              if (_asset.conversationId != null) ...[
                 const SizedBox(height: 12),
                 _DetailRow(
                   label: 'Conversation ID',
-                  value: asset.conversationId!,
+                  value: _asset.conversationId!,
                 ),
               ],
               const SizedBox(height: 32),
-              const Text(
-                '編集と削除は次のStepで追加します。',
-                textAlign: TextAlign.center,
+              SizedBox(
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: _openEditScreen,
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                  ),
+                  label: const Text(
+                    'Knowledgeを編集する',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
               ),
             ],
           ),

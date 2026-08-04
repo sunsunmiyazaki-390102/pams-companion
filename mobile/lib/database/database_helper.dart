@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 4;
+  static const int databaseVersion = 5;
 
   Database? _database;
 
@@ -41,7 +41,9 @@ class DatabaseHelper {
   }
 
   Future<void> _onConfigure(Database database) async {
-    await database.execute('PRAGMA foreign_keys = ON');
+    await database.execute(
+      'PRAGMA foreign_keys = ON',
+    );
   }
 
   Future<void> _onCreate(
@@ -69,10 +71,14 @@ class DatabaseHelper {
 
     if (oldVersion < 4) {
       await _createKnowledgeAssetsTable(database);
+    } else if (oldVersion < 5) {
+      await _addKnowledgeTypeColumn(database);
     }
   }
 
-  Future<void> _createProjectsTable(Database database) async {
+  Future<void> _createProjectsTable(
+    Database database,
+  ) async {
     await database.execute('''
       CREATE TABLE projects (
         project_id TEXT PRIMARY KEY,
@@ -84,7 +90,9 @@ class DatabaseHelper {
     ''');
   }
 
-  Future<void> _createAiSessionsTable(Database database) async {
+  Future<void> _createAiSessionsTable(
+    Database database,
+  ) async {
     await database.execute('''
       CREATE TABLE ai_sessions (
         session_id TEXT PRIMARY KEY,
@@ -132,6 +140,7 @@ class DatabaseHelper {
         knowledge_id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
         conversation_id TEXT,
+        knowledge_type TEXT NOT NULL DEFAULT 'insight',
         content TEXT NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
@@ -152,6 +161,26 @@ class DatabaseHelper {
     await database.execute('''
       CREATE INDEX index_knowledge_assets_conversation_id
       ON knowledge_assets (conversation_id)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_assets_knowledge_type
+      ON knowledge_assets (knowledge_type)
+    ''');
+  }
+
+  Future<void> _addKnowledgeTypeColumn(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE knowledge_assets
+      ADD COLUMN knowledge_type
+      TEXT NOT NULL DEFAULT 'insight'
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_assets_knowledge_type
+      ON knowledge_assets (knowledge_type)
     ''');
   }
 

@@ -83,4 +83,30 @@ class KnowledgeAssetRepository {
         .toList();
   }
 
+  Future<List<KnowledgeAsset>> search(
+    String keyword,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final normalizedKeyword = keyword.trim();
+
+    if (normalizedKeyword.isEmpty) {
+      return findAll();
+    }
+
+    final result = await database.query(
+      'knowledge_assets',
+      where: 'content LIKE ?',
+      whereArgs: ['%$normalizedKeyword%'],
+      orderBy: 'updated_at DESC',
+    );
+
+    return result
+        .map(
+          KnowledgeAsset.fromMap,
+        )
+        .toList();
+  }
+
 }

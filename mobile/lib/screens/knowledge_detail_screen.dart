@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/knowledge_asset.dart';
+import '../models/knowledge_type.dart';
 import 'knowledge_edit_screen.dart';
 
 class KnowledgeDetailScreen extends StatefulWidget {
@@ -145,9 +146,16 @@ class _KnowledgeDetailScreenState
                 ),
                 const SizedBox(height: 28),
                 _DetailRow(
+                  label: 'タイプ',
+                  value: KnowledgeType.displayName(
+                    _asset.knowledgeType,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _DetailRow(
                   label: '作成日時',
                   value: _formatDateTime(_asset.createdAt),
-                ),
+                ),               
                 const SizedBox(height: 12),
                 _DetailRow(
                   label: '更新日時',

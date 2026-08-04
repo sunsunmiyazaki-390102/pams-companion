@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/ai_session.dart';
 import '../models/knowledge_asset.dart';
+import '../models/knowledge_type.dart';
 import '../repositories/knowledge_asset_repository.dart';
 
 class AiInsightConfirmScreen extends StatefulWidget {
@@ -86,7 +87,7 @@ class _AiInsightConfirmScreenState
           knowledgeId: _uuid.v4(),
           sessionId: widget.session.sessionId,
           conversationId: null,
-          knowledgeType: 'insight',
+          knowledgeType: KnowledgeType.insight,
           content: insight,
           createdAt: now,
           updatedAt: now,

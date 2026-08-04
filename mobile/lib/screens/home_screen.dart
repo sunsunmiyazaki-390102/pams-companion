@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'ai_chat_screen.dart';
-import 'answer_review_screen.dart';
+import 'knowledge_list_screen.dart';
 import 'memory_screen.dart';
 import 'project_screen.dart';
 import 'settings_screen.dart';
@@ -51,8 +51,11 @@ class HomeScreen extends StatelessWidget {
                 label: 'AIの回答を整理する',
                 icon: Icons.fact_check_outlined,
                 onPressed: () {
-                  _openScreen(context, const AnswerReviewScreen());
-                },
+                  _openScreen(
+                    context,
+                    const KnowledgeListScreen(),
+                  );
+                },              
               ),
               const SizedBox(height: 16),
               _HomeMenuButton(

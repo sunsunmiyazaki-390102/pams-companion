@@ -66,4 +66,21 @@ class KnowledgeAssetRepository {
         )
         .toList();
   }
+
+  Future<List<KnowledgeAsset>> findAll() async {
+    final database =
+        await _databaseHelper.database;
+
+    final result = await database.query(
+      'knowledge_assets',
+      orderBy: 'created_at DESC',
+    );
+
+    return result
+        .map(
+          KnowledgeAsset.fromMap,
+        )
+        .toList();
+  }
+
 }

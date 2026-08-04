@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/ai_session.dart';
+import 'ai_insight_select_screen.dart';
 
 class AiResponseImportScreen extends StatefulWidget {
   const AiResponseImportScreen({
@@ -37,7 +38,7 @@ class _AiResponseImportScreenState
     super.dispose();
   }
 
-  void _confirmResponse() {
+  Future<void> _confirmResponse() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
     final response = _responseController.text.trim();
@@ -53,11 +54,11 @@ class _AiResponseImportScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$_selectedProviderの回答を確認しました。'
-          '保存処理は次のStepで実装します。',
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => AiInsightSelectScreen(
+          session: widget.session,
+          aiResponse: response,
         ),
       ),
     );

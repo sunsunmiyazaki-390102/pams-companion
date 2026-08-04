@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/knowledge_asset.dart';
 import '../repositories/knowledge_asset_repository.dart';
+import 'knowledge_detail_screen.dart';
 
 class KnowledgeListScreen extends StatefulWidget {
   const KnowledgeListScreen({super.key});
@@ -95,28 +96,12 @@ class _KnowledgeListScreenState
                       Icons.chevron_right,
                     ),
                     onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) {
-                          return AlertDialog(
-                            title: const Text(
-                              'Knowledge',
-                            ),
-                            content: SelectableText(
-                              asset.content,
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text(
-                                  '閉じる',
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (context) => KnowledgeDetailScreen(
+                            asset: asset,
+                          ),
+                        ),
                       );
                     },
                   ),

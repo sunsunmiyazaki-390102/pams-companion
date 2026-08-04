@@ -20,6 +20,8 @@ class _KnowledgeDetailScreenState
     extends State<KnowledgeDetailScreen> {
   late KnowledgeAsset _asset;
 
+  bool _wasUpdated = false;
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +56,7 @@ class _KnowledgeDetailScreenState
 
     setState(() {
       _asset = updatedAsset;
+      _wasUpdated = true;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -65,98 +68,119 @@ class _KnowledgeDetailScreenState
     );
   }
 
+  void _closeDetailScreen() {
+    Navigator.of(context).pop(_wasUpdated);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Knowledge詳細'),
-        actions: [
-          IconButton(
-            onPressed: _openEditScreen,
-            tooltip: '編集',
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+
+        _closeDetailScreen();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: _closeDetailScreen,
+            tooltip: '戻る',
             icon: const Icon(
-              Icons.edit_outlined,
+              Icons.arrow_back,
             ),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const CircleAvatar(
-                    child: Icon(
-                      Icons.lightbulb_outline,
+          title: const Text('Knowledge詳細'),
+          actions: [
+            IconButton(
+              onPressed: _openEditScreen,
+              tooltip: '編集',
+              icon: const Icon(
+                Icons.edit_outlined,
+              ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const CircleAvatar(
+                      child: Icon(
+                        Icons.lightbulb_outline,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '知識資産',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '知識資産',
+                        style:
+                            Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  '内容',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SelectableText(
+                      _asset.content,
                       style:
-                          Theme.of(context).textTheme.titleLarge,
+                          Theme.of(context).textTheme.bodyLarge,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                '内容',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: SelectableText(
-                    _asset.content,
-                    style:
-                        Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              _DetailRow(
-                label: '作成日時',
-                value: _formatDateTime(_asset.createdAt),
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(
-                label: '更新日時',
-                value: _formatDateTime(_asset.updatedAt),
-              ),
-              const SizedBox(height: 12),
-              _DetailRow(
-                label: 'Session ID',
-                value: _asset.sessionId,
-              ),
-              if (_asset.conversationId != null) ...[
+                const SizedBox(height: 28),
+                _DetailRow(
+                  label: '作成日時',
+                  value: _formatDateTime(_asset.createdAt),
+                ),
                 const SizedBox(height: 12),
                 _DetailRow(
-                  label: 'Conversation ID',
-                  value: _asset.conversationId!,
+                  label: '更新日時',
+                  value: _formatDateTime(_asset.updatedAt),
+                ),
+                const SizedBox(height: 12),
+                _DetailRow(
+                  label: 'Session ID',
+                  value: _asset.sessionId,
+                ),
+                if (_asset.conversationId != null) ...[
+                  const SizedBox(height: 12),
+                  _DetailRow(
+                    label: 'Conversation ID',
+                    value: _asset.conversationId!,
+                  ),
+                ],
+                const SizedBox(height: 32),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: _openEditScreen,
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                    ),
+                    label: const Text(
+                      'Knowledgeを編集する',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
                 ),
               ],
-              const SizedBox(height: 32),
-              SizedBox(
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: _openEditScreen,
-                  icon: const Icon(
-                    Icons.edit_outlined,
-                  ),
-                  label: const Text(
-                    'Knowledgeを編集する',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

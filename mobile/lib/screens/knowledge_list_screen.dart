@@ -95,15 +95,19 @@ class _KnowledgeListScreenState
                     trailing: const Icon(
                       Icons.chevron_right,
                     ),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                    onTap: () async {
+                      final wasUpdated = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute<bool>(
                           builder: (context) => KnowledgeDetailScreen(
                             asset: asset,
                           ),
                         ),
                       );
-                    },
+
+                      if (wasUpdated == true) {
+                        await _reload();
+                      }
+                    },                  
                   ),
                 );
               },

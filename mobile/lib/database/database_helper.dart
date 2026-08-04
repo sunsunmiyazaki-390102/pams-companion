@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 3;
+  static const int databaseVersion = 4;
 
   Database? _database;
 
@@ -51,6 +51,7 @@ class DatabaseHelper {
     await _createProjectsTable(database);
     await _createAiSessionsTable(database);
     await _createAiConversationsTable(database);
+    await _createKnowledgeAssetsTable(database);
   }
 
   Future<void> _onUpgrade(
@@ -64,6 +65,10 @@ class DatabaseHelper {
 
     if (oldVersion < 3) {
       await _createAiConversationsTable(database);
+    }
+
+    if (oldVersion < 4) {
+      await _createKnowledgeAssetsTable(database);
     }
   }
 
@@ -116,6 +121,37 @@ class DatabaseHelper {
     await database.execute('''
       CREATE INDEX index_ai_conversations_session_id
       ON ai_conversations (session_id)
+    ''');
+  }
+
+  Future<void> _createKnowledgeAssetsTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE knowledge_assets (
+        knowledge_id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        conversation_id TEXT,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (session_id)
+          REFERENCES ai_sessions (session_id)
+          ON DELETE CASCADE,
+        FOREIGN KEY (conversation_id)
+          REFERENCES ai_conversations (conversation_id)
+          ON DELETE SET NULL
+      )
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_assets_session_id
+      ON knowledge_assets (session_id)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_assets_conversation_id
+      ON knowledge_assets (conversation_id)
     ''');
   }
 

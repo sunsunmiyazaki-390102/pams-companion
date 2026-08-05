@@ -23,6 +23,9 @@ class _KnowledgeDetailScreenState
     extends State<KnowledgeDetailScreen> {
   late KnowledgeAsset _asset;
 
+  final TextEditingController _linkReasonController =
+      TextEditingController();
+
   KnowledgeAsset? _selectedLinkTarget;
   String? _selectedLinkType;
 
@@ -34,14 +37,25 @@ class _KnowledgeDetailScreenState
     _asset = widget.asset;
   }
 
+  @override
+  void dispose() {
+    _linkReasonController.dispose();
+    super.dispose();
+  }
+
   String _formatDateTime(DateTime value) {
     final localValue = value.toLocal();
 
-    final year = localValue.year.toString().padLeft(4, '0');
-    final month = localValue.month.toString().padLeft(2, '0');
-    final day = localValue.day.toString().padLeft(2, '0');
-    final hour = localValue.hour.toString().padLeft(2, '0');
-    final minute = localValue.minute.toString().padLeft(2, '0');
+    final year =
+        localValue.year.toString().padLeft(4, '0');
+    final month =
+        localValue.month.toString().padLeft(2, '0');
+    final day =
+        localValue.day.toString().padLeft(2, '0');
+    final hour =
+        localValue.hour.toString().padLeft(2, '0');
+    final minute =
+        localValue.minute.toString().padLeft(2, '0');
 
     return '$year/$month/$day $hour:$minute';
   }
@@ -89,8 +103,7 @@ class _KnowledgeDetailScreenState
       return;
     }
 
-    final selectedType =
-        await _showLinkTypeDialog();
+    final selectedType = await _showLinkTypeDialog();
 
     if (selectedType == null || !mounted) {
       return;
@@ -99,6 +112,7 @@ class _KnowledgeDetailScreenState
     setState(() {
       _selectedLinkTarget = selectedAsset;
       _selectedLinkType = selectedType;
+      _linkReasonController.clear();
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -187,8 +201,7 @@ class _KnowledgeDetailScreenState
       return;
     }
 
-    final selectedType =
-        await _showLinkTypeDialog();
+    final selectedType = await _showLinkTypeDialog();
 
     if (selectedType == null || !mounted) {
       return;
@@ -200,9 +213,12 @@ class _KnowledgeDetailScreenState
   }
 
   void _clearSelectedLinkTarget() {
+    FocusManager.instance.primaryFocus?.unfocus();
+
     setState(() {
       _selectedLinkTarget = null;
       _selectedLinkType = null;
+      _linkReasonController.clear();
     });
   }
 
@@ -352,8 +368,7 @@ class _KnowledgeDetailScreenState
                   const SizedBox(height: 20),
                   Card(
                     child: Padding(
-                      padding:
-                          const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment:
                             CrossAxisAlignment.stretch,
@@ -421,10 +436,40 @@ class _KnowledgeDetailScreenState
                               ),
                             ],
                           ),
+                          const SizedBox(height: 20),
+                          Text(
+                            '結んだ理由',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'この二つのKnowledgeを'
+                            'なぜ結び付けたのかを、'
+                            '自分の言葉で残します。',
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller:
+                                _linkReasonController,
+                            minLines: 4,
+                            maxLines: 8,
+                            decoration:
+                                const InputDecoration(
+                              hintText:
+                                  '例：このKnowledgeは、'
+                                  '元の考えをさらに発展させた'
+                                  '内容だから。',
+                              border:
+                                  OutlineInputBorder(),
+                              alignLabelWithHint: true,
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           const Text(
-                            '結んだ理由の入力とSQLite保存は、'
-                            '次のStepで実装します。',
+                            '入力内容はまだSQLiteへ'
+                            '保存されません。',
                             textAlign: TextAlign.center,
                           ),
                         ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/knowledge_asset.dart';
 import '../models/knowledge_type.dart';
 import 'knowledge_edit_screen.dart';
+import 'knowledge_link_target_select_screen.dart';
 
 class KnowledgeDetailScreen extends StatefulWidget {
   const KnowledgeDetailScreen({
@@ -20,6 +21,8 @@ class KnowledgeDetailScreen extends StatefulWidget {
 class _KnowledgeDetailScreenState
     extends State<KnowledgeDetailScreen> {
   late KnowledgeAsset _asset;
+
+  KnowledgeAsset? _selectedLinkTarget;
 
   bool _wasUpdated = false;
 
@@ -69,12 +72,48 @@ class _KnowledgeDetailScreenState
     );
   }
 
+  Future<void> _openLinkTargetSelectScreen() async {
+    final selectedAsset =
+        await Navigator.of(context).push<KnowledgeAsset>(
+      MaterialPageRoute<KnowledgeAsset>(
+        builder: (context) =>
+            KnowledgeLinkTargetSelectScreen(
+          sourceAsset: _asset,
+        ),
+      ),
+    );
+
+    if (selectedAsset == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedLinkTarget = selectedAsset;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '結ぶKnowledgeを選択しました。',
+        ),
+      ),
+    );
+  }
+
+  void _clearSelectedLinkTarget() {
+    setState(() {
+      _selectedLinkTarget = null;
+    });
+  }
+
   void _closeDetailScreen() {
     Navigator.of(context).pop(_wasUpdated);
   }
 
   @override
   Widget build(BuildContext context) {
+    final selectedLinkTarget = _selectedLinkTarget;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -108,10 +147,12 @@ class _KnowledgeDetailScreenState
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment:
+                  CrossAxisAlignment.stretch,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     const CircleAvatar(
                       child: Icon(
@@ -122,8 +163,9 @@ class _KnowledgeDetailScreenState
                     Expanded(
                       child: Text(
                         '知識資産',
-                        style:
-                            Theme.of(context).textTheme.titleLarge,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge,
                       ),
                     ),
                   ],
@@ -131,7 +173,8 @@ class _KnowledgeDetailScreenState
                 const SizedBox(height: 24),
                 Text(
                   '内容',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style:
+                      Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
                 Card(
@@ -154,12 +197,16 @@ class _KnowledgeDetailScreenState
                 const SizedBox(height: 12),
                 _DetailRow(
                   label: '作成日時',
-                  value: _formatDateTime(_asset.createdAt),
-                ),               
+                  value: _formatDateTime(
+                    _asset.createdAt,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 _DetailRow(
                   label: '更新日時',
-                  value: _formatDateTime(_asset.updatedAt),
+                  value: _formatDateTime(
+                    _asset.updatedAt,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _DetailRow(
@@ -171,6 +218,91 @@ class _KnowledgeDetailScreenState
                   _DetailRow(
                     label: 'Conversation ID',
                     value: _asset.conversationId!,
+                  ),
+                ],
+                const SizedBox(height: 32),
+                Text(
+                  'Knowledgeを結ぶ',
+                  style:
+                      Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'このKnowledgeと関係するKnowledgeを'
+                  '選択します。',
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton.tonalIcon(
+                    onPressed:
+                        _openLinkTargetSelectScreen,
+                    icon: const Icon(
+                      Icons.hub_outlined,
+                    ),
+                    label: const Text(
+                      '結ぶKnowledgeを選ぶ',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+                if (selectedLinkTarget != null) ...[
+                  const SizedBox(height: 20),
+                  Card(
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.link_outlined,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '選択したKnowledge',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed:
+                                    _clearSelectedLinkTarget,
+                                tooltip: '選択を解除',
+                                icon: const Icon(
+                                  Icons.close,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            selectedLinkTarget.content,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'タイプ：'
+                            '${KnowledgeType.displayName(selectedLinkTarget.knowledgeType)}',
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '更新日時：'
+                            '${_formatDateTime(selectedLinkTarget.updatedAt)}',
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            '関係の種類と保存処理は、'
+                            '次のStepで実装します。',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 32),
@@ -208,7 +340,8 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         SizedBox(
           width: 96,

@@ -67,6 +67,28 @@ class KnowledgeAssetRepository {
         .toList();
   }
 
+  Future<KnowledgeAsset?> findById(
+    String knowledgeId,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final result = await database.query(
+      'knowledge_assets',
+      where: 'knowledge_id = ?',
+      whereArgs: [knowledgeId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return KnowledgeAsset.fromMap(
+      result.first,
+    );
+  }
+
   Future<List<KnowledgeAsset>> findAll() async {
     final database =
         await _databaseHelper.database;

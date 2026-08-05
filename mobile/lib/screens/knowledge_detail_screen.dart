@@ -5,6 +5,7 @@ import '../models/knowledge_asset.dart';
 import '../models/knowledge_link.dart';
 import '../models/knowledge_link_type.dart';
 import '../models/knowledge_type.dart';
+import '../repositories/knowledge_asset_repository.dart';
 import '../repositories/knowledge_link_repository.dart';
 import 'knowledge_edit_screen.dart';
 import 'knowledge_link_target_select_screen.dart';
@@ -31,6 +32,9 @@ class _KnowledgeDetailScreenState
 
   final KnowledgeLinkRepository _linkRepository =
       KnowledgeLinkRepository();
+
+  final KnowledgeAssetRepository _knowledgeRepository =
+      KnowledgeAssetRepository();
 
   late Future<List<KnowledgeLink>>
       _knowledgeLinksFuture;
@@ -62,13 +66,6 @@ class _KnowledgeDetailScreenState
     return _linkRepository.findByKnowledgeId(
       _asset.knowledgeId,
     );
-  }
-
-  Future<void> _reloadKnowledgeLinks() async {
-    setState(() {
-      _knowledgeLinksFuture =
-          _loadKnowledgeLinks();
-    });
   }
 
   String _formatDateTime(DateTime value) {
@@ -491,6 +488,7 @@ class _KnowledgeDetailScreenState
                       .titleMedium,
                 ),
                 const SizedBox(height: 12),
+
                 FutureBuilder<List<KnowledgeLink>>(
                   future: _knowledgeLinksFuture,
                   builder: (context, snapshot) {
@@ -513,24 +511,168 @@ class _KnowledgeDetailScreenState
 
                     final links = snapshot.data ?? [];
 
-                    return Card(
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          child: Icon(
-                            Icons.account_tree_outlined,
+                    if (links.isEmpty) {
+                      return Card(
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            child: Icon(
+                              Icons.account_tree_outlined,
+                            ),
+                          ),
+                          title: const Text(
+                            '結び付きはありません。',
+                          ),
+                          subtitle: const Text(
+                            'Knowledge同士を結ぶと'
+                            'ここへ表示されます。',
                           ),
                         ),
-                        title: Text(
-                          '保存済みの結び付き：${links.length}件',
-                        ),
-                        subtitle: const Text(
-                          '結び付きの詳細表示は'
-                          '次のStepで実装します。',
-                        ),
-                      ),
+                      );
+                    }
+
+                    return Column(
+                      children: links.map((link) {
+                        final isOutgoing =
+                            link.fromKnowledgeId ==
+                                _asset.knowledgeId;
+
+                        final connectedKnowledgeId =
+                            isOutgoing
+                                ? link.toKnowledgeId
+                                : link.fromKnowledgeId;
+
+                        final directionLabel = isOutgoing
+                            ? 'このKnowledgeから結ばれています'
+                            : 'このKnowledgeへ結ばれています';
+
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 12,
+                          ),
+                          child: FutureBuilder<KnowledgeAsset?>(
+                            future: _knowledgeRepository.findById(
+                              connectedKnowledgeId,
+                            ),
+                            builder: (
+                              context,
+                              knowledgeSnapshot,
+                            ) {
+                              if (knowledgeSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Card(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(24),
+                                    child: Center(
+                                      child:
+                                          CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              if (knowledgeSnapshot.hasError) {
+                                return Card(
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.all(16),
+                                    child: Text(
+                                      '接続先Knowledgeの読み込みに'
+                                      '失敗しました。\n'
+                                      '${knowledgeSnapshot.error}',
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final connectedKnowledge =
+                                  knowledgeSnapshot.data;
+
+                              return Card(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.link,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              KnowledgeLinkType
+                                                  .displayName(
+                                                link.linkType,
+                                              ),
+                                              style:
+                                                  const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight:
+                                                    FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        directionLabel,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                      const Divider(height: 28),
+                                      const Text(
+                                        '接続先Knowledge',
+                                        style: TextStyle(
+                                          fontWeight:
+                                              FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        connectedKnowledge?.content ??
+                                            '接続先Knowledgeが'
+                                                '見つかりません。',
+                                      ),
+                                      if (connectedKnowledge !=
+                                          null) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'タイプ：'
+                                          '${KnowledgeType.displayName(connectedKnowledge.knowledgeType)}',
+                                        ),
+                                      ],
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        '結んだ理由',
+                                        style: TextStyle(
+                                          fontWeight:
+                                              FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        link.linkReason.isEmpty
+                                            ? '（未入力）'
+                                            : link.linkReason,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }).toList(),
                     );
                   },
-                ),               
+                ),
+              
                 const SizedBox(height: 32),
                 Text(
                   'Knowledgeを結ぶ',

@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 5;
+  static const int databaseVersion = 6;
 
   Database? _database;
 
@@ -40,7 +40,9 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> _onConfigure(Database database) async {
+  Future<void> _onConfigure(
+    Database database,
+  ) async {
     await database.execute(
       'PRAGMA foreign_keys = ON',
     );
@@ -54,6 +56,7 @@ class DatabaseHelper {
     await _createAiSessionsTable(database);
     await _createAiConversationsTable(database);
     await _createKnowledgeAssetsTable(database);
+    await _createKnowledgeLinksTable(database);
   }
 
   Future<void> _onUpgrade(
@@ -73,6 +76,10 @@ class DatabaseHelper {
       await _createKnowledgeAssetsTable(database);
     } else if (oldVersion < 5) {
       await _addKnowledgeTypeColumn(database);
+    }
+
+    if (oldVersion < 6) {
+      await _createKnowledgeLinksTable(database);
     }
   }
 
@@ -181,6 +188,42 @@ class DatabaseHelper {
     await database.execute('''
       CREATE INDEX index_knowledge_assets_knowledge_type
       ON knowledge_assets (knowledge_type)
+    ''');
+  }
+
+  Future<void> _createKnowledgeLinksTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE knowledge_links (
+        link_id TEXT PRIMARY KEY,
+        from_knowledge_id TEXT NOT NULL,
+        to_knowledge_id TEXT NOT NULL,
+        link_type TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (from_knowledge_id)
+          REFERENCES knowledge_assets (knowledge_id)
+          ON DELETE CASCADE,
+        FOREIGN KEY (to_knowledge_id)
+          REFERENCES knowledge_assets (knowledge_id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_links_from_knowledge_id
+      ON knowledge_links (from_knowledge_id)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_links_to_knowledge_id
+      ON knowledge_links (to_knowledge_id)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_links_link_type
+      ON knowledge_links (link_type)
     ''');
   }
 

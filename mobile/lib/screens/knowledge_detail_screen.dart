@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/knowledge_asset.dart';
+import '../models/knowledge_link_type.dart';
 import '../models/knowledge_type.dart';
 import 'knowledge_edit_screen.dart';
 import 'knowledge_link_target_select_screen.dart';
@@ -23,6 +24,7 @@ class _KnowledgeDetailScreenState
   late KnowledgeAsset _asset;
 
   KnowledgeAsset? _selectedLinkTarget;
+  String? _selectedLinkType;
 
   bool _wasUpdated = false;
 
@@ -87,22 +89,120 @@ class _KnowledgeDetailScreenState
       return;
     }
 
+    final selectedType =
+        await _showLinkTypeDialog();
+
+    if (selectedType == null || !mounted) {
+      return;
+    }
+
     setState(() {
       _selectedLinkTarget = selectedAsset;
+      _selectedLinkType = selectedType;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          '結ぶKnowledgeを選択しました。',
+          'Knowledgeと関係の種類を選択しました。',
         ),
       ),
     );
   }
 
+  Future<String?> _showLinkTypeDialog() async {
+    String temporaryType =
+        _selectedLinkType ??
+            KnowledgeLinkType.related;
+
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text(
+                'どのような関係ですか？',
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: RadioGroup<String>(
+                  groupValue: temporaryType,
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+
+                    setDialogState(() {
+                      temporaryType = value;
+                    });
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children:
+                        KnowledgeLinkType.values.map(
+                      (type) {
+                        return RadioListTile<String>(
+                          value: type,
+                          title: Text(
+                            KnowledgeLinkType.displayName(
+                              type,
+                            ),
+                          ),
+                        );
+                      },
+                    ).toList(),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text(
+                    'キャンセル',
+                  ),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(
+                      temporaryType,
+                    );
+                  },
+                  child: const Text(
+                    '選択する',
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _changeLinkType() async {
+    if (_selectedLinkTarget == null) {
+      return;
+    }
+
+    final selectedType =
+        await _showLinkTypeDialog();
+
+    if (selectedType == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedLinkType = selectedType;
+    });
+  }
+
   void _clearSelectedLinkTarget() {
     setState(() {
       _selectedLinkTarget = null;
+      _selectedLinkType = null;
     });
   }
 
@@ -113,6 +213,7 @@ class _KnowledgeDetailScreenState
   @override
   Widget build(BuildContext context) {
     final selectedLinkTarget = _selectedLinkTarget;
+    final selectedLinkType = _selectedLinkType;
 
     return PopScope(
       canPop: false,
@@ -246,7 +347,8 @@ class _KnowledgeDetailScreenState
                     ),
                   ),
                 ),
-                if (selectedLinkTarget != null) ...[
+                if (selectedLinkTarget != null &&
+                    selectedLinkType != null) ...[
                   const SizedBox(height: 20),
                   Card(
                     child: Padding(
@@ -286,7 +388,7 @@ class _KnowledgeDetailScreenState
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'タイプ：'
+                            'Knowledgeタイプ：'
                             '${KnowledgeType.displayName(selectedLinkTarget.knowledgeType)}',
                           ),
                           const SizedBox(height: 8),
@@ -294,9 +396,34 @@ class _KnowledgeDetailScreenState
                             '更新日時：'
                             '${_formatDateTime(selectedLinkTarget.updatedAt)}',
                           ),
-                          const SizedBox(height: 16),
+                          const Divider(height: 32),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '関係：'
+                                  '${KnowledgeLinkType.displayName(selectedLinkType)}',
+                                  style: const TextStyle(
+                                    fontWeight:
+                                        FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed:
+                                    _changeLinkType,
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                ),
+                                label: const Text(
+                                  '変更',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                           const Text(
-                            '関係の種類と保存処理は、'
+                            '結んだ理由の入力とSQLite保存は、'
                             '次のStepで実装します。',
                             textAlign: TextAlign.center,
                           ),

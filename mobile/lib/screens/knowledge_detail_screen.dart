@@ -32,6 +32,9 @@ class _KnowledgeDetailScreenState
   final KnowledgeLinkRepository _linkRepository =
       KnowledgeLinkRepository();
 
+  late Future<List<KnowledgeLink>>
+      _knowledgeLinksFuture;
+
   final Uuid _uuid = const Uuid();
 
   KnowledgeAsset? _selectedLinkTarget;
@@ -43,13 +46,29 @@ class _KnowledgeDetailScreenState
   @override
   void initState() {
     super.initState();
+
     _asset = widget.asset;
+    _knowledgeLinksFuture = _loadKnowledgeLinks();
   }
 
   @override
   void dispose() {
     _linkReasonController.dispose();
     super.dispose();
+  }
+
+  Future<List<KnowledgeLink>>
+      _loadKnowledgeLinks() {
+    return _linkRepository.findByKnowledgeId(
+      _asset.knowledgeId,
+    );
+  }
+
+  Future<void> _reloadKnowledgeLinks() async {
+    setState(() {
+      _knowledgeLinksFuture =
+          _loadKnowledgeLinks();
+    });
   }
 
   String _formatDateTime(DateTime value) {
@@ -305,6 +324,8 @@ class _KnowledgeDetailScreenState
         _selectedLinkTarget = null;
         _selectedLinkType = null;
         _linkReasonController.clear();
+        _knowledgeLinksFuture =
+            _loadKnowledgeLinks();
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -462,6 +483,54 @@ class _KnowledgeDetailScreenState
                     value: _asset.conversationId!,
                   ),
                 ],
+                const SizedBox(height: 32),
+                Text(
+                  'Knowledge Network',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium,
+                ),
+                const SizedBox(height: 12),
+                FutureBuilder<List<KnowledgeLink>>(
+                  future: _knowledgeLinksFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return Text(
+                        'Knowledge Networkの読み込みに'
+                        '失敗しました。\n${snapshot.error}',
+                      );
+                    }
+
+                    final links = snapshot.data ?? [];
+
+                    return Card(
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          child: Icon(
+                            Icons.account_tree_outlined,
+                          ),
+                        ),
+                        title: Text(
+                          '保存済みの結び付き：${links.length}件',
+                        ),
+                        subtitle: const Text(
+                          '結び付きの詳細表示は'
+                          '次のStepで実装します。',
+                        ),
+                      ),
+                    );
+                  },
+                ),               
                 const SizedBox(height: 32),
                 Text(
                   'Knowledgeを結ぶ',

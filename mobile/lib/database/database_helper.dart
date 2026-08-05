@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 6;
+  static const int databaseVersion = 7;
 
   Database? _database;
 
@@ -80,6 +80,8 @@ class DatabaseHelper {
 
     if (oldVersion < 6) {
       await _createKnowledgeLinksTable(database);
+    } else if (oldVersion < 7) {
+      await _addKnowledgeLinkReasonColumn(database);
     }
   }
 
@@ -200,6 +202,7 @@ class DatabaseHelper {
         from_knowledge_id TEXT NOT NULL,
         to_knowledge_id TEXT NOT NULL,
         link_type TEXT NOT NULL,
+        link_reason TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (from_knowledge_id)
@@ -224,6 +227,16 @@ class DatabaseHelper {
     await database.execute('''
       CREATE INDEX index_knowledge_links_link_type
       ON knowledge_links (link_type)
+    ''');
+  }
+
+  Future<void> _addKnowledgeLinkReasonColumn(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE knowledge_links
+      ADD COLUMN link_reason
+      TEXT NOT NULL DEFAULT ''
     ''');
   }
 

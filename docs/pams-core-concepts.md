@@ -1,6 +1,6 @@
 # PAMS Core Concepts
 
-Version: 1.0
+Version: 1.1
 
 ---
 
@@ -9,6 +9,7 @@ Version: 1.0
 | Version | 日付 | 内容 |
 |---------|------|------|
 | 1.0 | 2026-08-04 | 初版作成 |
+| 1.1 | 2026-08-05 | KnowledgeLinkのReason概念を追加 |
 
 ---
 
@@ -122,6 +123,22 @@ KnowledgeLinkは単なる関連情報ではなく、
 KnowledgeLink自身も時間とともに成長する。
 
 ---
+
+## Reason
+
+Reasonは、Knowledge同士を「なぜ結んだのか」を説明する情報である。
+
+KnowledgeLinkの種類だけでは、利用者がどのような考えから
+二つのKnowledgeを結び付けたのかを十分に表現できない。
+
+PAMSでは、次の三層を一つの思考構造として扱う。
+
+```text
+Knowledge
+    ↓
+KnowledgeLink
+    ↓
+Reason
 
 # 8. Knowledge Network
 

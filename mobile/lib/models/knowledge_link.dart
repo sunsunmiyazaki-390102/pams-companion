@@ -4,6 +4,7 @@ class KnowledgeLink {
     required this.fromKnowledgeId,
     required this.toKnowledgeId,
     required this.linkType,
+    required this.linkReason,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -12,6 +13,7 @@ class KnowledgeLink {
   final String fromKnowledgeId;
   final String toKnowledgeId;
   final String linkType;
+  final String linkReason;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,6 +27,8 @@ class KnowledgeLink {
       toKnowledgeId:
           map['to_knowledge_id'] as String,
       linkType: map['link_type'] as String,
+      linkReason:
+          map['link_reason'] as String? ?? '',
       createdAt: DateTime.parse(
         map['created_at'] as String,
       ),
@@ -40,6 +44,7 @@ class KnowledgeLink {
       'from_knowledge_id': fromKnowledgeId,
       'to_knowledge_id': toKnowledgeId,
       'link_type': linkType,
+      'link_reason': linkReason,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -50,6 +55,7 @@ class KnowledgeLink {
     String? fromKnowledgeId,
     String? toKnowledgeId,
     String? linkType,
+    String? linkReason,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -60,6 +66,7 @@ class KnowledgeLink {
       toKnowledgeId:
           toKnowledgeId ?? this.toKnowledgeId,
       linkType: linkType ?? this.linkType,
+      linkReason: linkReason ?? this.linkReason,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

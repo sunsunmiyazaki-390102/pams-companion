@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/knowledge_asset.dart';
+import '../models/knowledge_link.dart';
 import '../models/knowledge_link_type.dart';
 import '../models/knowledge_type.dart';
+import '../repositories/knowledge_link_repository.dart';
 import 'knowledge_edit_screen.dart';
 import 'knowledge_link_target_select_screen.dart';
 
@@ -26,10 +29,16 @@ class _KnowledgeDetailScreenState
   final TextEditingController _linkReasonController =
       TextEditingController();
 
+  final KnowledgeLinkRepository _linkRepository =
+      KnowledgeLinkRepository();
+
+  final Uuid _uuid = const Uuid();
+
   KnowledgeAsset? _selectedLinkTarget;
   String? _selectedLinkType;
 
   bool _wasUpdated = false;
+  bool _isSavingLink = false;
 
   @override
   void initState() {
@@ -212,6 +221,120 @@ class _KnowledgeDetailScreenState
     });
   }
 
+  Future<void> _saveKnowledgeLink() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final target = _selectedLinkTarget;
+    final linkType = _selectedLinkType;
+    final linkReason =
+        _linkReasonController.text.trim();
+
+    if (target == null || linkType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '結ぶKnowledgeと関係の種類を選んでください。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (linkReason.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'このKnowledgeを結ぶ理由を入力してください。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_isSavingLink) {
+      return;
+    }
+
+    setState(() {
+      _isSavingLink = true;
+    });
+
+    try {
+      final alreadyExists =
+          await _linkRepository.existsBetween(
+        fromKnowledgeId: _asset.knowledgeId,
+        toKnowledgeId: target.knowledgeId,
+        linkType: linkType,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (alreadyExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '同じKnowledgeと関係のリンクは'
+              'すでに保存されています。',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final now = DateTime.now();
+
+      final link = KnowledgeLink(
+        linkId: _uuid.v4(),
+        fromKnowledgeId: _asset.knowledgeId,
+        toKnowledgeId: target.knowledgeId,
+        linkType: linkType,
+        linkReason: linkReason,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await _linkRepository.insert(link);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _selectedLinkTarget = null;
+        _selectedLinkType = null;
+        _linkReasonController.clear();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Knowledgeを結びました。',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Knowledgeの保存に失敗しました。\n$error',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingLink = false;
+        });
+      }
+    }
+  }
+
   void _clearSelectedLinkTarget() {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -290,8 +413,9 @@ class _KnowledgeDetailScreenState
                 const SizedBox(height: 24),
                 Text(
                   '内容',
-                  style:
-                      Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium,
                 ),
                 const SizedBox(height: 12),
                 Card(
@@ -299,8 +423,9 @@ class _KnowledgeDetailScreenState
                     padding: const EdgeInsets.all(20),
                     child: SelectableText(
                       _asset.content,
-                      style:
-                          Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge,
                     ),
                   ),
                 ),
@@ -340,8 +465,9 @@ class _KnowledgeDetailScreenState
                 const SizedBox(height: 32),
                 Text(
                   'Knowledgeを結ぶ',
-                  style:
-                      Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium,
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -352,8 +478,9 @@ class _KnowledgeDetailScreenState
                 SizedBox(
                   height: 52,
                   child: FilledButton.tonalIcon(
-                    onPressed:
-                        _openLinkTargetSelectScreen,
+                    onPressed: _isSavingLink
+                        ? null
+                        : _openLinkTargetSelectScreen,
                     icon: const Icon(
                       Icons.hub_outlined,
                     ),
@@ -388,8 +515,9 @@ class _KnowledgeDetailScreenState
                                 ),
                               ),
                               IconButton(
-                                onPressed:
-                                    _clearSelectedLinkTarget,
+                                onPressed: _isSavingLink
+                                    ? null
+                                    : _clearSelectedLinkTarget,
                                 tooltip: '選択を解除',
                                 icon: const Icon(
                                   Icons.close,
@@ -425,8 +553,9 @@ class _KnowledgeDetailScreenState
                                 ),
                               ),
                               TextButton.icon(
-                                onPressed:
-                                    _changeLinkType,
+                                onPressed: _isSavingLink
+                                    ? null
+                                    : _changeLinkType,
                                 icon: const Icon(
                                   Icons.edit_outlined,
                                 ),
@@ -453,6 +582,7 @@ class _KnowledgeDetailScreenState
                           TextField(
                             controller:
                                 _linkReasonController,
+                            enabled: !_isSavingLink,
                             minLines: 4,
                             maxLines: 8,
                             decoration:
@@ -466,11 +596,35 @@ class _KnowledgeDetailScreenState
                               alignLabelWithHint: true,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            '入力内容はまだSQLiteへ'
-                            '保存されません。',
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 52,
+                            child: FilledButton.icon(
+                              onPressed: _isSavingLink
+                                  ? null
+                                  : _saveKnowledgeLink,
+                              icon: _isSavingLink
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child:
+                                          CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons
+                                          .account_tree_outlined,
+                                    ),
+                              label: Text(
+                                _isSavingLink
+                                    ? '保存しています...'
+                                    : 'Knowledgeを結ぶ',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

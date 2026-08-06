@@ -6,6 +6,7 @@ import '../models/knowledge_link_type.dart';
 import '../models/knowledge_type.dart';
 import '../repositories/knowledge_asset_repository.dart';
 import '../repositories/knowledge_link_repository.dart';
+import 'knowledge_detail_screen.dart';
 
 class KnowledgeNetworkScreen extends StatefulWidget {
   const KnowledgeNetworkScreen({
@@ -60,6 +61,24 @@ class _KnowledgeNetworkScreenState
       fromKnowledge: knowledgeAssets[0],
       toKnowledge: knowledgeAssets[1],
     );
+  }
+
+  Future<void> _openKnowledge(
+    KnowledgeAsset knowledge,
+  ) async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) => KnowledgeDetailScreen(
+          asset: knowledge,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _reload();
   }
 
   String _formatDateTime(DateTime value) {
@@ -283,16 +302,27 @@ class _KnowledgeNetworkScreenState
                                       ),
                                     );
                                   }
-
                                   return _KnowledgeNetworkCard(
-                                    viewData:
-                                        viewData,
-                                    formattedDateTime:
-                                        _formatDateTime(
-                                      viewData
-                                          .link
-                                          .updatedAt,
+                                    viewData: viewData,
+                                    formattedDateTime: _formatDateTime(
+                                      viewData.link.updatedAt,
                                     ),
+                                    onOpenFrom:
+                                        viewData.fromKnowledge == null
+                                            ? null
+                                            : () async {
+                                                await _openKnowledge(
+                                                  viewData.fromKnowledge!,
+                                                );
+                                              },
+                                    onOpenTo:
+                                        viewData.toKnowledge == null
+                                            ? null
+                                            : () async {
+                                                await _openKnowledge(
+                                                  viewData.toKnowledge!,
+                                                );
+                                              },
                                   );
                                 },
                               ),
@@ -329,10 +359,14 @@ class _KnowledgeNetworkCard
   const _KnowledgeNetworkCard({
     required this.viewData,
     required this.formattedDateTime,
+    required this.onOpenFrom,
+    required this.onOpenTo,
   });
 
   final _KnowledgeLinkViewData viewData;
   final String formattedDateTime;
+  final VoidCallback? onOpenFrom;
+  final VoidCallback? onOpenTo;
 
   @override
   Widget build(BuildContext context) {
@@ -465,6 +499,35 @@ class _KnowledgeNetworkCard
                   : link.linkReason,
             ),
             const SizedBox(height: 16),
+           
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onOpenFrom,
+                    icon: const Icon(
+                      Icons.open_in_new,
+                    ),
+                    label: const Text(
+                      '接続元を開く',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    onPressed: onOpenTo,
+                    icon: const Icon(
+                      Icons.open_in_new,
+                    ),
+                    label: const Text(
+                      '接続先を開く',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),           
             Text(
               '更新日時：$formattedDateTime',
               textAlign: TextAlign.right,

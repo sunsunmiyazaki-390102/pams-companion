@@ -7,6 +7,7 @@ import '../models/knowledge_type.dart';
 import '../repositories/knowledge_asset_repository.dart';
 import '../repositories/knowledge_link_repository.dart';
 import 'knowledge_detail_screen.dart';
+import 'knowledge_link_edit_screen.dart';
 
 class KnowledgeNetworkScreen extends StatefulWidget {
   const KnowledgeNetworkScreen({
@@ -79,6 +80,83 @@ class _KnowledgeNetworkScreenState
     }
 
     await _reload();
+  }
+
+  Future<void> _openLinkEditScreen(
+    KnowledgeLink link,
+  ) async {
+    final updatedLink =
+        await Navigator.of(context).push<KnowledgeLink>(
+      MaterialPageRoute<KnowledgeLink>(
+        builder: (context) =>
+            KnowledgeLinkEditScreen(
+          link: link,
+        ),
+      ),
+    );
+
+    if (updatedLink == null || !mounted) {
+      return;
+    }
+
+    try {
+      await _linkRepository.update(
+        updatedLink,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      await _reload();
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Knowledgeの関係を更新しました。\n'
+            '関係：'
+            '${KnowledgeLinkType.displayName(updatedLink.linkType)}',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Knowledgeの関係を'
+            '更新できませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    }
+  }
+
+  Map<String, int> _countLinksByType(
+    List<KnowledgeLink> links,
+  ) {
+    final counts = <String, int>{
+      for (final type in KnowledgeLinkType.values)
+        type: 0,
+    };
+
+    for (final link in links) {
+      counts.update(
+        link.linkType,
+        (currentCount) => currentCount + 1,
+        ifAbsent: () => 1,
+      );
+    }
+
+    return counts;
   }
 
   String _formatDateTime(DateTime value) {
@@ -182,6 +260,9 @@ class _KnowledgeNetworkScreenState
                   final links =
                       snapshot.data ?? [];
 
+                  final linkTypeCounts =
+                      _countLinksByType(links);
+
                   return RefreshIndicator(
                     onRefresh: _reload,
                     child: ListView(
@@ -196,20 +277,53 @@ class _KnowledgeNetworkScreenState
                       ),
                       children: [
                         Card(
-                          child: ListTile(
-                            leading:
-                                const CircleAvatar(
-                              child: Icon(
-                                Icons.hub_outlined,
-                              ),
-                            ),
-                            title: Text(
-                              '保存済みの結び付き：'
-                              '${links.length}件',
-                            ),
-                            subtitle: const Text(
-                              'Knowledge同士の関係と'
-                              '結んだ理由を表示します。',
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.stretch,
+                              children: [
+                                const Row(
+                                  children: [
+                                    CircleAvatar(
+                                      child: Icon(
+                                        Icons.insights_outlined,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Network統計',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _NetworkStatisticRow(
+                                  label: 'すべての結び付き',
+                                  count: links.length,
+                                ),
+                                const Divider(height: 24),
+                                ...KnowledgeLinkType.values.map(
+                                  (type) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: 10,
+                                    ),
+                                    child: _NetworkStatisticRow(
+                                      label:
+                                          KnowledgeLinkType.displayName(
+                                        type,
+                                      ),
+                                      count:
+                                          linkTypeCounts[type] ?? 0,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -302,6 +416,7 @@ class _KnowledgeNetworkScreenState
                                       ),
                                     );
                                   }
+                           
                                   return _KnowledgeNetworkCard(
                                     viewData: viewData,
                                     formattedDateTime: _formatDateTime(
@@ -323,7 +438,12 @@ class _KnowledgeNetworkScreenState
                                                   viewData.toKnowledge!,
                                                 );
                                               },
-                                  );
+                                    onEdit: () async {
+                                      await _openLinkEditScreen(
+                                        viewData.link,
+                                      );
+                                    },
+                                  );                           
                                 },
                               ),
                             ),
@@ -361,13 +481,15 @@ class _KnowledgeNetworkCard
     required this.formattedDateTime,
     required this.onOpenFrom,
     required this.onOpenTo,
+    required this.onEdit,
   });
 
   final _KnowledgeLinkViewData viewData;
   final String formattedDateTime;
   final VoidCallback? onOpenFrom;
   final VoidCallback? onOpenTo;
-
+  final VoidCallback onEdit; 
+ 
   @override
   Widget build(BuildContext context) {
     final link = viewData.link;
@@ -499,7 +621,6 @@ class _KnowledgeNetworkCard
                   : link.linkReason,
             ),
             const SizedBox(height: 16),
-           
             Row(
               children: [
                 Expanded(
@@ -527,9 +648,22 @@ class _KnowledgeNetworkCard
                 ),
               ],
             ),
-            const SizedBox(height: 16),           
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(
+                  Icons.edit_outlined,
+                ),
+                label: const Text(
+                  '関係を編集する',
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
-              '更新日時：$formattedDateTime',
+              '更新日時：$formattedDateTime',          
               textAlign: TextAlign.right,
               style:
                   Theme.of(context)
@@ -539,6 +673,36 @@ class _KnowledgeNetworkCard
           ],
         ),
       ),
+    );
+  }
+}
+
+class _NetworkStatisticRow
+    extends StatelessWidget {
+  const _NetworkStatisticRow({
+    required this.label,
+    required this.count,
+  });
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+          ),
+        ),
+        Text(
+          '$count件',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

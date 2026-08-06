@@ -86,6 +86,22 @@ class KnowledgeLinkRepository {
         .toList();
   }
 
+  Future<List<KnowledgeLink>> findAll() async {
+    final database =
+        await _databaseHelper.database;
+
+    final result = await database.query(
+      'knowledge_links',
+      orderBy: 'created_at DESC',
+    );
+
+    return result
+        .map(
+          KnowledgeLink.fromMap,
+        )
+        .toList();
+  }
+
   Future<List<KnowledgeLink>> findByKnowledgeId(
     String knowledgeId,
   ) async {

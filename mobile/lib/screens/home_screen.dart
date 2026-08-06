@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'ai_chat_screen.dart';
 import 'knowledge_list_screen.dart';
+import 'knowledge_network_screen.dart';
 import 'memory_screen.dart';
 import 'project_screen.dart';
 import 'settings_screen.dart';
@@ -58,6 +59,17 @@ class HomeScreen extends StatelessWidget {
                 },              
               ),
               const SizedBox(height: 16),
+              _HomeMenuButton(
+                label: '知識のつながりを見る',
+                icon: Icons.account_tree_outlined,
+                onPressed: () {
+                  _openScreen(
+                    context,
+                    const KnowledgeNetworkScreen(),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),            
               _HomeMenuButton(
                 label: '今日の記憶',
                 icon: Icons.lightbulb_outline,

@@ -8,6 +8,7 @@ import '../repositories/knowledge_asset_repository.dart';
 import '../repositories/knowledge_link_repository.dart';
 import 'knowledge_detail_screen.dart';
 import 'knowledge_link_edit_screen.dart';
+import 'knowledge_network_graph_screen.dart';
 
 class KnowledgeNetworkScreen extends StatefulWidget {
   const KnowledgeNetworkScreen({
@@ -62,6 +63,21 @@ class _KnowledgeNetworkScreenState
       fromKnowledge: knowledgeAssets[0],
       toKnowledge: knowledgeAssets[1],
     );
+  }
+
+  Future<void> _openGraphScreen() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const KnowledgeNetworkGraphScreen(),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _reload();
   }
 
   Future<void> _openKnowledge(
@@ -183,7 +199,16 @@ class _KnowledgeNetworkScreenState
         title: const Text(
           'Knowledge Network',
         ),
-      ),
+        actions: [
+          IconButton(
+            onPressed: _openGraphScreen,
+            tooltip: 'Graphで見る',
+            icon: const Icon(
+              Icons.hub_outlined,
+            ),
+          ),
+        ],
+      ),    
       body: SafeArea(
         child: Column(
           crossAxisAlignment:

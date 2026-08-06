@@ -353,6 +353,30 @@ class _KnowledgeDetailScreenState
     }
   }
 
+  Future<void> _openConnectedKnowledge(
+    KnowledgeAsset connectedKnowledge,
+  ) async {
+    final wasUpdated =
+        await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (context) => KnowledgeDetailScreen(
+          asset: connectedKnowledge,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (wasUpdated == true) {
+      setState(() {
+        _knowledgeLinksFuture =
+            _loadKnowledgeLinks();
+      });
+    }
+  }
+
   void _clearSelectedLinkTarget() {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -573,8 +597,7 @@ class _KnowledgeDetailScreenState
                               if (knowledgeSnapshot.hasError) {
                                 return Card(
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.all(16),
                                     child: Text(
                                       '接続先Knowledgeの読み込みに'
                                       '失敗しました。\n'
@@ -588,80 +611,107 @@ class _KnowledgeDetailScreenState
                                   knowledgeSnapshot.data;
 
                               return Card(
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.link,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              KnowledgeLinkType
-                                                  .displayName(
-                                                link.linkType,
-                                              ),
-                                              style:
-                                                  const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight:
-                                                    FontWeight.bold,
+                                clipBehavior: Clip.antiAlias,
+                                child: InkWell(
+                                  onTap: connectedKnowledge == null
+                                      ? null
+                                      : () {
+                                          _openConnectedKnowledge(
+                                            connectedKnowledge,
+                                          );
+                                        },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.link,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                KnowledgeLinkType.displayName(
+                                                  link.linkType,
+                                                ),
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        directionLabel,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
-                                      const Divider(height: 28),
-                                      const Text(
-                                        '接続先Knowledge',
-                                        style: TextStyle(
-                                          fontWeight:
-                                              FontWeight.bold,
+                                            if (connectedKnowledge != null)
+                                              const Icon(
+                                                Icons.chevron_right,
+                                              ),
+                                          ],
                                         ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        connectedKnowledge?.content ??
-                                            '接続先Knowledgeが'
-                                                '見つかりません。',
-                                      ),
-                                      if (connectedKnowledge !=
-                                          null) ...[
                                         const SizedBox(height: 8),
                                         Text(
-                                          'タイプ：'
-                                          '${KnowledgeType.displayName(connectedKnowledge.knowledgeType)}',
+                                          directionLabel,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall,
                                         ),
+                                        const Divider(height: 28),
+                                        const Text(
+                                          '接続先Knowledge',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          connectedKnowledge?.content ??
+                                              '接続先Knowledgeが'
+                                                  '見つかりません。',
+                                        ),
+                                        if (connectedKnowledge != null) ...[
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'タイプ：'
+                                            '${KnowledgeType.displayName(connectedKnowledge.knowledgeType)}',
+                                          ),
+                                        ],
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          '結んだ理由',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          link.linkReason.isEmpty
+                                              ? '（未入力）'
+                                              : link.linkReason,
+                                        ),
+                                        if (connectedKnowledge != null) ...[
+                                          const SizedBox(height: 16),
+                                          const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                'このKnowledgeを開く',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Icon(
+                                                Icons.arrow_forward,
+                                                size: 18,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ],
-                                      const SizedBox(height: 16),
-                                      const Text(
-                                        '結んだ理由',
-                                        style: TextStyle(
-                                          fontWeight:
-                                              FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        link.linkReason.isEmpty
-                                            ? '（未入力）'
-                                            : link.linkReason,
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               );

@@ -9,6 +9,7 @@ import '../repositories/ai_conversation_repository.dart';
 import '../repositories/ai_session_repository.dart';
 import '../repositories/project_repository.dart';
 import 'ai_conversation_list_screen.dart';
+import 'prompt_assist_screen.dart';
 
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({
@@ -92,6 +93,27 @@ class _AiChatScreenState
     );
   } 
  
+  Future<void> _openPromptAssist() async {
+    final prompt =
+        await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (context) =>
+            const PromptAssistScreen(),
+      ),
+    );
+
+    if (!mounted ||
+        prompt == null ||
+        prompt.trim().isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _questionController.text =
+          prompt.trim();
+    });
+  }
+
   String _buildSessionTitle(
     String question,
   ) {
@@ -437,6 +459,20 @@ class _AiChatScreenState
                               const SizedBox(
                                 height: 12,
                               ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: _openPromptAssist,
+                                  icon: const Icon(
+                                    Icons.auto_awesome_outlined,
+                                  ),
+                                  label: const Text(
+                                    '質問作成を手伝ってもらう',
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
                               TextFormField(
                                 controller:
                                     _questionController,

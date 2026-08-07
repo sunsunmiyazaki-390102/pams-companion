@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 7;
+  static const int databaseVersion = 8;
 
   Database? _database;
 
@@ -83,6 +83,12 @@ class DatabaseHelper {
     } else if (oldVersion < 7) {
       await _addKnowledgeLinkReasonColumn(database);
     }
+  
+    if (oldVersion < 8) {
+      await _addAiConversationResponseStatusColumn(
+        database,
+      );
+    } 
   }
 
   Future<void> _createProjectsTable(
@@ -127,6 +133,7 @@ class DatabaseHelper {
         ai_response TEXT NOT NULL,
         summary TEXT,
         ai_provider TEXT,
+        response_status TEXT NOT NULL DEFAULT 'received',       
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (session_id)
@@ -139,6 +146,11 @@ class DatabaseHelper {
       CREATE INDEX index_ai_conversations_session_id
       ON ai_conversations (session_id)
     ''');
+ 
+    await database.execute('''
+      CREATE INDEX index_ai_conversations_response_status
+      ON ai_conversations (response_status)
+    ''');  
   }
 
   Future<void> _createKnowledgeAssetsTable(
@@ -237,6 +249,22 @@ class DatabaseHelper {
       ALTER TABLE knowledge_links
       ADD COLUMN link_reason
       TEXT NOT NULL DEFAULT ''
+    ''');
+  }
+
+  Future<void>
+      _addAiConversationResponseStatusColumn(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN response_status
+      TEXT NOT NULL DEFAULT 'received'
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_ai_conversations_response_status
+      ON ai_conversations (response_status)
     ''');
   }
 

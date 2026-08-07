@@ -6,9 +6,10 @@ class AiConversation {
     required this.aiResponse,
     required this.summary,
     required this.aiProvider,
+    required this.responseStatus,
     required this.createdAt,
     required this.updatedAt,
-  });
+  }); 
 
   final String conversationId;
   final String sessionId;
@@ -16,6 +17,7 @@ class AiConversation {
   final String aiResponse;
   final String summary;
   final String aiProvider;
+  final String responseStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -26,6 +28,7 @@ class AiConversation {
     String? aiResponse,
     String? summary,
     String? aiProvider,
+    String? responseStatus,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -36,6 +39,9 @@ class AiConversation {
       aiResponse: aiResponse ?? this.aiResponse,
       summary: summary ?? this.summary,
       aiProvider: aiProvider ?? this.aiProvider,
+      responseStatus:
+          responseStatus ??
+          this.responseStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -49,6 +55,7 @@ class AiConversation {
       'ai_response': aiResponse,
       'summary': summary,
       'ai_provider': aiProvider,
+      'response_status': responseStatus,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -64,6 +71,10 @@ class AiConversation {
       aiResponse: map['ai_response'] as String,
       summary: map['summary'] as String? ?? '',
       aiProvider: map['ai_provider'] as String? ?? '',
+      responseStatus:
+          map['response_status']
+              as String? ??
+          'received',     
       createdAt: DateTime.parse(
         map['created_at'] as String,
       ),

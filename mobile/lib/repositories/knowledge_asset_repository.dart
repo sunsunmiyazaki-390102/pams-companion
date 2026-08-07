@@ -46,6 +46,29 @@ class KnowledgeAssetRepository {
     );
   }
 
+  Future<KnowledgeAsset?> findByConversationId(
+    String conversationId,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final result = await database.query(
+      'knowledge_assets',
+      where: 'conversation_id = ?',
+      whereArgs: [conversationId],
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+
+    if (result.isEmpty) {
+      return null;
+    }
+
+    return KnowledgeAsset.fromMap(
+      result.first,
+    );
+  }
+
   Future<List<KnowledgeAsset>>
       findBySessionId(
     String sessionId,

@@ -2,12 +2,30 @@ import '../database/database_helper.dart';
 import '../models/ai_conversation.dart';
 
 class AiConversationRepository {
-  final _databaseHelper = DatabaseHelper.instance;
+  final DatabaseHelper _databaseHelper =
+      DatabaseHelper.instance;
+
+  Future<List<AiConversation>> findAll() async {
+    final database =
+        await _databaseHelper.database;
+
+    final maps = await database.query(
+      'ai_conversations',
+      orderBy: 'updated_at DESC',
+    );
+
+    return maps
+        .map(
+          AiConversation.fromMap,
+        )
+        .toList();
+  }
 
   Future<List<AiConversation>> findBySessionId(
     String sessionId,
   ) async {
-    final database = await _databaseHelper.database;
+    final database =
+        await _databaseHelper.database;
 
     final maps = await database.query(
       'ai_conversations',
@@ -16,11 +34,60 @@ class AiConversationRepository {
       orderBy: 'updated_at DESC',
     );
 
-    return maps.map(AiConversation.fromMap).toList();
+    return maps
+        .map(
+          AiConversation.fromMap,
+        )
+        .toList();
   }
 
-  Future<void> insert(AiConversation conversation) async {
-    final database = await _databaseHelper.database;
+  Future<List<AiConversation>> findByResponseStatus(
+    String responseStatus,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final maps = await database.query(
+      'ai_conversations',
+      where: 'response_status = ?',
+      whereArgs: [responseStatus],
+      orderBy: 'updated_at DESC',
+    );
+
+    return maps
+        .map(
+          AiConversation.fromMap,
+        )
+        .toList();
+  }
+
+  Future<AiConversation?> findById(
+    String conversationId,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final maps = await database.query(
+      'ai_conversations',
+      where: 'conversation_id = ?',
+      whereArgs: [conversationId],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return AiConversation.fromMap(
+      maps.first,
+    );
+  }
+
+  Future<void> insert(
+    AiConversation conversation,
+  ) async {
+    final database =
+        await _databaseHelper.database;
 
     await database.insert(
       'ai_conversations',
@@ -28,25 +95,62 @@ class AiConversationRepository {
     );
   }
 
-  Future<void> update(AiConversation conversation) async {
-    final database = await _databaseHelper.database;
+  Future<void> update(
+    AiConversation conversation,
+  ) async {
+    final database =
+        await _databaseHelper.database;
 
     await database.update(
       'ai_conversations',
       {
-        'user_message': conversation.userMessage,
-        'ai_response': conversation.aiResponse,
-        'summary': conversation.summary,
-        'ai_provider': conversation.aiProvider,
-        'updated_at': conversation.updatedAt.toIso8601String(),
+        'user_message':
+            conversation.userMessage,
+        'ai_response':
+            conversation.aiResponse,
+        'summary':
+            conversation.summary,
+        'ai_provider':
+            conversation.aiProvider,
+        'response_status':
+            conversation.responseStatus,
+        'updated_at':
+            conversation.updatedAt
+                .toIso8601String(),
       },
       where: 'conversation_id = ?',
-      whereArgs: [conversation.conversationId],
+      whereArgs: [
+        conversation.conversationId,
+      ],
     );
   }
 
-  Future<void> delete(String conversationId) async {
-    final database = await _databaseHelper.database;
+  Future<void> updateResponseStatus({
+    required String conversationId,
+    required String responseStatus,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    await database.update(
+      'ai_conversations',
+      {
+        'response_status':
+            responseStatus,
+        'updated_at':
+            DateTime.now()
+                .toIso8601String(),
+      },
+      where: 'conversation_id = ?',
+      whereArgs: [conversationId],
+    );
+  }
+
+  Future<void> delete(
+    String conversationId,
+  ) async {
+    final database =
+        await _databaseHelper.database;
 
     await database.delete(
       'ai_conversations',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PromptAssistScreen
     extends StatefulWidget {
@@ -166,6 +167,46 @@ class _PromptAssistScreenState
     });
   }
 
+  Future<void> _copyGeneratedPrompt() async {
+    final prompt =
+        _generatedPromptController.text.trim();
+
+    if (prompt.isEmpty) {
+      return;
+    }
+
+    await Clipboard.setData(
+      ClipboardData(
+        text: prompt,
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '質問文をコピーしました。',
+        ),
+      ),
+    );
+  }
+
+  void _useGeneratedPrompt() {
+    final prompt =
+        _generatedPromptController.text.trim();
+
+    if (prompt.isEmpty) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      prompt,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -261,29 +302,6 @@ class _PromptAssistScreenState
                           return null;
                         },
                       ),
-                    
-                      const SizedBox(height: 16),
-
-                      FilledButton.icon(
-                        onPressed: () {
-                          final prompt =
-                              _generatedPromptController.text.trim();
-
-                          if (prompt.isEmpty) {
-                            return;
-                          }
-
-                          Navigator.of(context).pop(
-                            prompt,
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.arrow_back,
-                        ),
-                        label: const Text(
-                          'この質問文を使う',
-                        ),
-                      ),                    
                     ],
                   ),
                 ),
@@ -452,8 +470,8 @@ class _PromptAssistScreenState
                 label: const Text(
                   '質問文を作成する',
                 ),
-              ),            
-            
+              ),
+
               const SizedBox(height: 24),
 
               if (_generatedPromptController
@@ -485,13 +503,17 @@ class _PromptAssistScreenState
                             ),
                           ],
                         ),
+
                         const SizedBox(height: 8),
+
                         const Text(
                           'このまま使うことも、'
                           '自分の言葉へ直すことも'
                           'できます。',
                         ),
+
                         const SizedBox(height: 12),
+
                         TextFormField(
                           controller:
                               _generatedPromptController,
@@ -501,13 +523,40 @@ class _PromptAssistScreenState
                               const InputDecoration(
                             border:
                                 OutlineInputBorder(),
-                            alignLabelWithHint: true,
+                            alignLabelWithHint:
+                                true,
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        OutlinedButton.icon(
+                          onPressed:
+                              _copyGeneratedPrompt,
+                          icon: const Icon(
+                            Icons.copy_outlined,
+                          ),
+                          label: const Text(
+                            '質問文をコピーする',
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        FilledButton.icon(
+                          onPressed:
+                              _useGeneratedPrompt,
+                          icon: const Icon(
+                            Icons.arrow_back,
+                          ),
+                          label: const Text(
+                            'この質問文を使う',
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),            
+                ),
             ],
           ),
         ),

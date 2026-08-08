@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/ai_conversation.dart';
@@ -112,6 +113,45 @@ class _AiChatScreenState
       _questionController.text =
           prompt.trim();
     });
+  }
+
+  Future<void> _pasteAiResponseFromClipboard() async {
+    final clipboardData =
+        await Clipboard.getData(
+      Clipboard.kTextPlain,
+    );
+
+    final text =
+        clipboardData?.text?.trim();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (text == null || text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'クリップボードに'
+            '貼り付けできる文章がありません。',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      _aiResponseController.text = text;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'AIの回答を貼り付けました。',
+        ),
+      ),
+    );
   }
 
   String _buildSessionTitle(
@@ -531,9 +571,24 @@ class _AiChatScreenState
                                 'AIから受け取った回答を'
                                 '貼り付けてください。',
                               ),
-                              const SizedBox(
-                                height: 12,
+                              const SizedBox(height: 12),
+
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed:
+                                      _pasteAiResponseFromClipboard,
+                                  icon: const Icon(
+                                    Icons.content_paste_outlined,
+                                  ),
+                                  label: const Text(
+                                    'クリップボードから貼り付ける',
+                                  ),
+                                ),
                               ),
+
+                              const SizedBox(height: 8),
+                            
                               TextFormField(
                                 controller:
                                     _aiResponseController,

@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 8;
+  static const int databaseVersion = 10;
 
   Database? _database;
 
@@ -57,6 +57,8 @@ class DatabaseHelper {
     await _createAiConversationsTable(database);
     await _createKnowledgeAssetsTable(database);
     await _createKnowledgeLinksTable(database);
+    await _createKnowledgeCandidatesTable(database);
+    await _createNewQuestionsTable(database);
   }
 
   Future<void> _onUpgrade(
@@ -89,6 +91,21 @@ class DatabaseHelper {
         database,
       );
     } 
+  
+    if (oldVersion < 9) {
+      await _addAiConversationQuestionColumns(
+        database,
+      );
+    }  
+  
+    if (oldVersion < 10) {
+      await _createKnowledgeCandidatesTable(
+        database,
+      );
+      await _createNewQuestionsTable(
+        database,
+      );
+    }  
   }
 
   Future<void> _createProjectsTable(
@@ -133,6 +150,11 @@ class DatabaseHelper {
         ai_response TEXT NOT NULL,
         summary TEXT,
         ai_provider TEXT,
+        question_topic TEXT,
+        question_purpose TEXT,
+        question_context TEXT,
+        question_detail_level TEXT,
+        question_conditions TEXT,
         response_status TEXT NOT NULL DEFAULT 'received',       
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
@@ -242,6 +264,66 @@ class DatabaseHelper {
     ''');
   }
 
+  Future<void> _createKnowledgeCandidatesTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE knowledge_candidates (
+        candidate_id TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        suggested_type TEXT NOT NULL,
+        reason TEXT NOT NULL DEFAULT '',
+        source_excerpt TEXT,
+        status TEXT NOT NULL DEFAULT 'candidate',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (conversation_id)
+          REFERENCES ai_conversations (conversation_id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_candidates_conversation_id
+      ON knowledge_candidates (conversation_id)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_knowledge_candidates_status
+      ON knowledge_candidates (status)
+    ''');
+  }
+
+  Future<void> _createNewQuestionsTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE new_questions (
+        question_id TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        reason TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'candidate',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (conversation_id)
+          REFERENCES ai_conversations (conversation_id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_new_questions_conversation_id
+      ON new_questions (conversation_id)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_new_questions_status
+      ON new_questions (status)
+    ''');
+  }
+
   Future<void> _addKnowledgeLinkReasonColumn(
     Database database,
   ) async {
@@ -265,6 +347,35 @@ class DatabaseHelper {
     await database.execute('''
       CREATE INDEX index_ai_conversations_response_status
       ON ai_conversations (response_status)
+    ''');
+  }
+
+  Future<void> _addAiConversationQuestionColumns(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN question_topic TEXT
+    ''');
+
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN question_purpose TEXT
+    ''');
+
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN question_context TEXT
+    ''');
+
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN question_detail_level TEXT
+    ''');
+
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN question_conditions TEXT
     ''');
   }
 

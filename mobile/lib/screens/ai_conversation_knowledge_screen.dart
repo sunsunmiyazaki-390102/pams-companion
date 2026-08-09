@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../models/ai_conversation.dart';
 import '../models/ai_response_status.dart';
 import '../models/knowledge_asset.dart';
+import '../models/knowledge_candidate.dart';
 import '../models/knowledge_type.dart';
 import '../repositories/ai_conversation_repository.dart';
 import '../repositories/knowledge_asset_repository.dart';
@@ -13,9 +14,15 @@ class AiConversationKnowledgeScreen
   const AiConversationKnowledgeScreen({
     super.key,
     required this.conversation,
+    this.candidate,
   });
 
   final AiConversation conversation;
+
+  // Knowledge Candidate経由の場合だけ指定する。
+  // nullの場合は従来どおり、
+  // AI回答から直接Knowledgeを作る。
+  final KnowledgeCandidate? candidate;
 
   @override
   State<AiConversationKnowledgeScreen>
@@ -41,19 +48,28 @@ class _AiConversationKnowledgeScreenState
   late final TextEditingController
       _knowledgeContentController;
 
-  String _selectedKnowledgeType =
-      KnowledgeType.insight;
+  late String _selectedKnowledgeType;
 
   bool _isSaving = false;
+
+  bool get _isCandidateMode =>
+      widget.candidate != null;
 
   @override
   void initState() {
     super.initState();
 
+    final candidate = widget.candidate;
+
     _knowledgeContentController =
         TextEditingController(
-      text: widget.conversation.aiResponse,
+      text: candidate?.content ??
+          widget.conversation.aiResponse,
     );
+
+    _selectedKnowledgeType =
+        candidate?.suggestedType ??
+            KnowledgeType.insight;
   }
 
   @override
@@ -81,71 +97,119 @@ class _AiConversationKnowledgeScreenState
     String? insertedKnowledgeId;
 
     try {
-      final existingKnowledge =
-          await _knowledgeRepository
-              .findByConversationId(
-        widget.conversation.conversationId,
-      );
+      final candidate = widget.candidate;
 
-      if (existingKnowledge == null) {
-        final now = DateTime.now();
-        final knowledgeId = _uuid.v4();
+      KnowledgeAsset? existingKnowledge;
 
-        final knowledge = KnowledgeAsset(
-          knowledgeId: knowledgeId,
-          sessionId:
-              widget.conversation.sessionId,
-          conversationId:
-              widget.conversation.conversationId,
-          knowledgeType:
-              _selectedKnowledgeType,
-          content:
-              _knowledgeContentController
-                  .text
-                  .trim(),
-          createdAt: now,
-          updatedAt: now,
+      if (candidate != null) {
+        // Candidate経由では、
+        // 同じ候補からKnowledgeが
+        // 二重作成されないことを確認する。
+        existingKnowledge =
+            await _knowledgeRepository
+                .findBySourceCandidateId(
+          candidate.candidateId,
         );
-
-        await _knowledgeRepository.insert(
-          knowledge,
+      } else {
+        // 従来経路では、
+        // 1 Conversation = 1 Knowledge
+        // の旧仕様を維持する。
+        existingKnowledge =
+            await _knowledgeRepository
+                .findByConversationId(
+          widget.conversation.conversationId,
         );
-
-        insertedKnowledgeId = knowledgeId;
-
-        final savedKnowledge =
-            await _knowledgeRepository.findById(
-          knowledgeId,
-        );
-
-        if (savedKnowledge == null) {
-          throw StateError(
-            '保存したKnowledgeを'
-            '確認できませんでした。',
-          );
-        }
       }
 
-      await _conversationRepository
-          .updateResponseStatus(
+      if (existingKnowledge != null) {
+        throw StateError(
+          _isCandidateMode
+              ? 'このKnowledge候補は'
+                  'すでにKnowledgeとして'
+                  '保存されています。'
+              : 'このAI相談は'
+                  'すでにKnowledgeとして'
+                  '保存されています。',
+        );
+      }
+
+      final now = DateTime.now();
+      final knowledgeId = _uuid.v4();
+
+      final knowledge = KnowledgeAsset(
+        knowledgeId: knowledgeId,
+        sessionId:
+            widget.conversation.sessionId,
         conversationId:
             widget.conversation.conversationId,
-        responseStatus:
-            AiResponseStatus.organized,
+        sourceCandidateId:
+            candidate?.candidateId,
+        knowledgeType:
+            _selectedKnowledgeType,
+        content:
+            _knowledgeContentController
+                .text
+                .trim(),
+        createdAt: now,
+        updatedAt: now,
       );
 
-      final updatedConversation =
-          await _conversationRepository.findById(
-        widget.conversation.conversationId,
+      await _knowledgeRepository.insert(
+        knowledge,
       );
 
-      if (updatedConversation == null ||
-          updatedConversation.responseStatus !=
-              AiResponseStatus.organized) {
+      insertedKnowledgeId = knowledgeId;
+
+      final savedKnowledge =
+          await _knowledgeRepository.findById(
+        knowledgeId,
+      );
+
+      if (savedKnowledge == null) {
         throw StateError(
-          'AI相談の整理状態を'
-          '更新できませんでした。',
+          '保存したKnowledgeを'
+          '確認できませんでした。',
         );
+      }
+
+      if (candidate != null &&
+          savedKnowledge.sourceCandidateId !=
+              candidate.candidateId) {
+        throw StateError(
+          'Knowledge候補との関連を'
+          '確認できませんでした。',
+        );
+      }
+
+      // 従来経路の場合だけ、
+      // Conversation全体をorganizedにする。
+      //
+      // Candidate経由では複数候補や
+      // New Questionが残る可能性があるため、
+      // 1件保存しただけでは
+      // Conversation全体をorganizedにしない。
+      if (!_isCandidateMode) {
+        await _conversationRepository
+            .updateResponseStatus(
+          conversationId:
+              widget.conversation.conversationId,
+          responseStatus:
+              AiResponseStatus.organized,
+        );
+
+        final updatedConversation =
+            await _conversationRepository.findById(
+          widget.conversation.conversationId,
+        );
+
+        if (updatedConversation == null ||
+            updatedConversation.responseStatus !=
+                AiResponseStatus.organized) {
+          throw StateError(
+            'AI相談の整理状態を'
+            '更新できませんでした。',
+          );
+        }
       }
 
       if (!mounted) {
@@ -161,7 +225,8 @@ class _AiConversationKnowledgeScreenState
           );
         } catch (_) {
           // ロールバック失敗時は、
-          // 次回の重複確認で復旧する。
+          // source_candidate_idの
+          // UNIQUE制約などで重複を防ぐ。
         }
       }
 
@@ -189,6 +254,9 @@ class _AiConversationKnowledgeScreenState
   Widget build(BuildContext context) {
     final conversation =
         widget.conversation;
+
+    final candidate =
+        widget.candidate;
 
     return Scaffold(
       appBar: AppBar(
@@ -223,13 +291,21 @@ class _AiConversationKnowledgeScreenState
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
-              const Text(
-                'AIとの対話を振り返り、'
-                '自分のKnowledgeとして'
-                '残したい内容を整理します。',
+
+              Text(
+                _isCandidateMode
+                    ? '選択したKnowledge候補を確認し、'
+                        '必要に応じて編集してから'
+                        '正式なKnowledgeとして保存します。'
+                    : 'AIとの対話を振り返り、'
+                        '自分のKnowledgeとして'
+                        '残したい内容を整理します。',
               ),
+
               const SizedBox(height: 24),
+
               Card(
                 child: Padding(
                   padding:
@@ -254,7 +330,9 @@ class _AiConversationKnowledgeScreenState
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
+
               Card(
                 child: Padding(
                   padding:
@@ -271,7 +349,8 @@ class _AiConversationKnowledgeScreenState
                               'AIからの回答',
                               style: TextStyle(
                                 fontWeight:
-                                    FontWeight.bold,
+                                    FontWeight
+                                        .bold,
                               ),
                             ),
                           ),
@@ -297,7 +376,66 @@ class _AiConversationKnowledgeScreenState
                   ),
                 ),
               ),
+
+              if (candidate != null) ...[
+                const SizedBox(height: 16),
+
+                Card(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.all(
+                      16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment
+                              .stretch,
+                      children: [
+                        const Text(
+                          '選択したKnowledge候補',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 12,
+                        ),
+
+                        SelectableText(
+                          candidate.content,
+                        ),
+
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        Text(
+                          '提案Type：'
+                          '${KnowledgeType.displayName(candidate.suggestedType)}',
+                        ),
+
+                        if (candidate
+                            .reason
+                            .isNotEmpty) ...[
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Text(
+                            '理由：'
+                            '${candidate.reason}',
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 24),
+
               Card(
                 child: Padding(
                   padding:
@@ -315,14 +453,23 @@ class _AiConversationKnowledgeScreenState
                               FontWeight.bold,
                         ),
                       ),
+
                       const SizedBox(height: 8),
-                      const Text(
-                        'AIの回答をそのまま'
-                        '保存する必要はありません。'
-                        '自分にとって重要な内容へ'
-                        '編集してください。',
+
+                      Text(
+                        _isCandidateMode
+                            ? '候補の内容を確認し、'
+                                '自分のKnowledgeとして'
+                                '残したい文章へ'
+                                '編集してください。'
+                            : 'AIの回答をそのまま'
+                                '保存する必要はありません。'
+                                '自分にとって重要な内容へ'
+                                '編集してください。',
                       ),
+
                       const SizedBox(height: 12),
+
                       TextFormField(
                         controller:
                             _knowledgeContentController,
@@ -356,7 +503,9 @@ class _AiConversationKnowledgeScreenState
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
+
               Card(
                 child: Padding(
                   padding:
@@ -374,13 +523,17 @@ class _AiConversationKnowledgeScreenState
                               FontWeight.bold,
                         ),
                       ),
+
                       const SizedBox(height: 8),
+
                       const Text(
                         'このKnowledgeが'
                         'どの種類に近いか'
                         '選択してください。',
                       ),
+
                       const SizedBox(height: 12),
+
                       RadioGroup<String>(
                         groupValue:
                             _selectedKnowledgeType,
@@ -418,7 +571,9 @@ class _AiConversationKnowledgeScreenState
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
+
               FilledButton.icon(
                 onPressed: _isSaving
                     ? null

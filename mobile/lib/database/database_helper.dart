@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 10;
+  static const int databaseVersion = 11;
 
   Database? _database;
 
@@ -106,6 +106,12 @@ class DatabaseHelper {
         database,
       );
     }  
+ 
+    if (oldVersion < 11) {
+      await _addKnowledgeSourceCandidateColumn(
+        database,
+      );
+    } 
   }
 
   Future<void> _createProjectsTable(
@@ -183,6 +189,7 @@ class DatabaseHelper {
         knowledge_id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
         conversation_id TEXT,
+        source_candidate_id TEXT,
         knowledge_type TEXT NOT NULL DEFAULT 'insight',
         content TEXT NOT NULL,
         created_at TEXT NOT NULL,
@@ -192,7 +199,10 @@ class DatabaseHelper {
           ON DELETE CASCADE,
         FOREIGN KEY (conversation_id)
           REFERENCES ai_conversations (conversation_id)
-          ON DELETE SET NULL
+          ON DELETE SET NULL,
+        FOREIGN KEY (source_candidate_id)
+          REFERENCES knowledge_candidates (candidate_id)
+          ON DELETE SET NULL       
       )
     ''');
 
@@ -210,6 +220,12 @@ class DatabaseHelper {
       CREATE INDEX index_knowledge_assets_knowledge_type
       ON knowledge_assets (knowledge_type)
     ''');
+ 
+    await database.execute('''
+      CREATE UNIQUE INDEX
+      index_knowledge_assets_source_candidate_id
+      ON knowledge_assets (source_candidate_id)
+    '''); 
   }
 
   Future<void> _addKnowledgeTypeColumn(
@@ -376,6 +392,23 @@ class DatabaseHelper {
     await database.execute('''
       ALTER TABLE ai_conversations
       ADD COLUMN question_conditions TEXT
+    ''');
+  }
+
+  Future<void> _addKnowledgeSourceCandidateColumn(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE knowledge_assets
+      ADD COLUMN source_candidate_id TEXT
+      REFERENCES knowledge_candidates (candidate_id)
+      ON DELETE SET NULL
+    ''');
+
+    await database.execute('''
+      CREATE UNIQUE INDEX
+      index_knowledge_assets_source_candidate_id
+      ON knowledge_assets (source_candidate_id)
     ''');
   }
 

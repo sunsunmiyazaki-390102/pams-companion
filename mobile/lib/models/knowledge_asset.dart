@@ -3,6 +3,7 @@ class KnowledgeAsset {
     required this.knowledgeId,
     required this.sessionId,
     required this.conversationId,
+    required this.sourceCandidateId,
     required this.knowledgeType,
     required this.content,
     required this.createdAt,
@@ -12,6 +13,11 @@ class KnowledgeAsset {
   final String knowledgeId;
   final String sessionId;
   final String? conversationId;
+
+  // このKnowledgeがKnowledge Candidateから
+  // 作られた場合、その候補IDを保持する。
+  final String? sourceCandidateId;
+
   final String knowledgeType;
   final String content;
   final DateTime createdAt;
@@ -21,12 +27,19 @@ class KnowledgeAsset {
     Map<String, Object?> map,
   ) {
     return KnowledgeAsset(
-      knowledgeId: map['knowledge_id'] as String,
-      sessionId: map['session_id'] as String,
-      conversationId: map['conversation_id'] as String?,
+      knowledgeId:
+          map['knowledge_id'] as String,
+      sessionId:
+          map['session_id'] as String,
+      conversationId:
+          map['conversation_id'] as String?,
+      sourceCandidateId:
+          map['source_candidate_id'] as String?,
       knowledgeType:
-          map['knowledge_type'] as String? ?? 'insight',
-      content: map['content'] as String,
+          map['knowledge_type'] as String? ??
+              'insight',
+      content:
+          map['content'] as String,
       createdAt: DateTime.parse(
         map['created_at'] as String,
       ),
@@ -41,10 +54,14 @@ class KnowledgeAsset {
       'knowledge_id': knowledgeId,
       'session_id': sessionId,
       'conversation_id': conversationId,
+      'source_candidate_id':
+          sourceCandidateId,
       'knowledge_type': knowledgeType,
       'content': content,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at':
+          createdAt.toIso8601String(),
+      'updated_at':
+          updatedAt.toIso8601String(),
     };
   }
 
@@ -53,22 +70,37 @@ class KnowledgeAsset {
     String? sessionId,
     String? conversationId,
     bool clearConversationId = false,
+    String? sourceCandidateId,
+    bool clearSourceCandidateId = false,
     String? knowledgeType,
     String? content,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return KnowledgeAsset(
-      knowledgeId: knowledgeId ?? this.knowledgeId,
-      sessionId: sessionId ?? this.sessionId,
-      conversationId: clearConversationId
-          ? null
-          : conversationId ?? this.conversationId,
+      knowledgeId:
+          knowledgeId ?? this.knowledgeId,
+      sessionId:
+          sessionId ?? this.sessionId,
+      conversationId:
+          clearConversationId
+              ? null
+              : conversationId ??
+                  this.conversationId,
+      sourceCandidateId:
+          clearSourceCandidateId
+              ? null
+              : sourceCandidateId ??
+                  this.sourceCandidateId,
       knowledgeType:
-          knowledgeType ?? this.knowledgeType,
-      content: content ?? this.content,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+          knowledgeType ??
+              this.knowledgeType,
+      content:
+          content ?? this.content,
+      createdAt:
+          createdAt ?? this.createdAt,
+      updatedAt:
+          updatedAt ?? this.updatedAt,
     );
   }
 }

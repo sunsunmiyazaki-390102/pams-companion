@@ -4,6 +4,7 @@ import '../models/ai_conversation.dart';
 import '../models/ai_response_status.dart';
 import '../repositories/ai_conversation_repository.dart';
 import 'ai_conversation_knowledge_screen.dart';
+import 'ai_conversation_reflection_screen.dart';
 
 class AiConversationDetailScreen
     extends StatefulWidget {
@@ -80,6 +81,32 @@ class _AiConversationDetailScreenState
       default:
         return Icons.inbox_outlined;
     }
+  }
+
+  Future<void> _openReflectionScreen() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            AiConversationReflectionScreen(
+          conversation: _conversation,
+        ),
+      ),
+    );
+
+    final updatedConversation =
+        await _conversationRepository.findById(
+      _conversation.conversationId,
+    );
+
+    if (updatedConversation == null ||
+        !mounted) {
+      return;
+    }
+
+    setState(() {
+      _conversation =
+          updatedConversation;
+    });
   }
 
   Future<void> _openKnowledgeScreen() async {
@@ -436,6 +463,19 @@ class _AiConversationDetailScreenState
                           ),
                         ],
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  FilledButton.icon(
+                    onPressed:
+                        _openReflectionScreen,
+                    icon: const Icon(
+                      Icons.psychology_outlined,
+                    ),
+                    label: const Text(
+                      'AI回答を整理する',
                     ),
                   ),
 

@@ -125,6 +125,27 @@ class AiConversationRepository {
     );
   }
 
+  Future<void> updateSummary({
+    required String conversationId,
+    required String summary,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    await database.update(
+      'ai_conversations',
+      {
+        'summary': summary,
+        'updated_at':
+            DateTime.now().toIso8601String(),
+      },
+      where: 'conversation_id = ?',
+      whereArgs: [
+        conversationId,
+      ],
+    );
+  }
+
   Future<void> updateResponseStatus({
     required String conversationId,
     required String responseStatus,

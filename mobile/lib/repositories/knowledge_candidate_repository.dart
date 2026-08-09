@@ -35,6 +35,27 @@ class KnowledgeCandidateRepository {
     );
   }
 
+  Future<void> updateStatus({
+    required String candidateId,
+    required String status,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    await database.update(
+      'knowledge_candidates',
+      {
+        'status': status,
+        'updated_at':
+            DateTime.now().toIso8601String(),
+      },
+      where: 'candidate_id = ?',
+      whereArgs: [
+        candidateId,
+      ],
+    );
+  }
+
   Future<void> delete(
     String candidateId,
   ) async {

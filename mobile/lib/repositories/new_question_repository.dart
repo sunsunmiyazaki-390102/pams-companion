@@ -35,6 +35,27 @@ class NewQuestionRepository {
     );
   }
 
+  Future<void> updateStatus({
+    required String questionId,
+    required String status,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    await database.update(
+      'new_questions',
+      {
+        'status': status,
+        'updated_at':
+            DateTime.now().toIso8601String(),
+      },
+      where: 'question_id = ?',
+      whereArgs: [
+        questionId,
+      ],
+    );
+  }
+
   Future<void> delete(
     String questionId,
   ) async {

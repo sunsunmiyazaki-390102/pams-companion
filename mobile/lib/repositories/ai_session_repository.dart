@@ -17,6 +17,28 @@ class AiSessionRepository {
     return maps.map(AiSession.fromMap).toList();
   }
 
+  Future<AiSession?> findById(
+    String sessionId,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final maps = await database.query(
+      'ai_sessions',
+      where: 'session_id = ?',
+      whereArgs: [sessionId],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return AiSession.fromMap(
+      maps.first,
+    );
+  }
+
   Future<void> insert(AiSession session) async {
     final database = await _databaseHelper.database;
 

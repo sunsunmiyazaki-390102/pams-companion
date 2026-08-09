@@ -5,9 +5,14 @@ import '../models/ai_conversation.dart';
 import '../models/knowledge_candidate.dart';
 import '../models/knowledge_candidate_status.dart';
 import '../models/knowledge_type.dart';
+import '../models/new_question.dart';
+import '../models/new_question_status.dart';
 import '../repositories/ai_conversation_repository.dart';
+import '../repositories/ai_session_repository.dart';
 import '../repositories/knowledge_asset_repository.dart';
 import '../repositories/knowledge_candidate_repository.dart';
+import '../repositories/new_question_repository.dart';
+import 'ai_chat_screen.dart';
 import 'ai_conversation_knowledge_screen.dart';
 
 class AiConversationReflectionScreen
@@ -31,6 +36,10 @@ class _AiConversationReflectionScreenState
       _conversationRepository =
       AiConversationRepository();
 
+  final AiSessionRepository
+      _sessionRepository =
+      AiSessionRepository();
+
   final KnowledgeCandidateRepository
       _knowledgeCandidateRepository =
       KnowledgeCandidateRepository();
@@ -38,6 +47,10 @@ class _AiConversationReflectionScreenState
   final KnowledgeAssetRepository
       _knowledgeAssetRepository =
       KnowledgeAssetRepository();
+
+  final NewQuestionRepository
+      _newQuestionRepository =
+      NewQuestionRepository();
 
   final Uuid _uuid = const Uuid();
 
@@ -50,6 +63,12 @@ class _AiConversationReflectionScreenState
   late final TextEditingController
       _candidateReasonController;
 
+  late final TextEditingController
+      _newQuestionContentController;
+
+  late final TextEditingController
+      _newQuestionReasonController;
+
   String _selectedSuggestedType =
       KnowledgeType.insight;
 
@@ -58,10 +77,17 @@ class _AiConversationReflectionScreenState
   bool _isLoadingCandidates = true;
   bool _isUpdatingCandidateStatus = false;
 
+  bool _isSavingNewQuestion = false;
+  bool _isLoadingNewQuestions = true;
+  bool _isUpdatingNewQuestionStatus = false;
+
   String? _openingCandidateId;
+  String? _openingQuestionId;
 
   List<KnowledgeCandidate>
       _knowledgeCandidates = [];
+
+  List<NewQuestion> _newQuestions = [];
 
   Set<String> _savedCandidateIds = {};
 
@@ -80,7 +106,14 @@ class _AiConversationReflectionScreenState
     _candidateReasonController =
         TextEditingController();
 
+    _newQuestionContentController =
+        TextEditingController();
+
+    _newQuestionReasonController =
+        TextEditingController();
+
     _loadKnowledgeCandidates();
+    _loadNewQuestions();
   }
 
   @override
@@ -88,6 +121,8 @@ class _AiConversationReflectionScreenState
     _summaryController.dispose();
     _candidateContentController.dispose();
     _candidateReasonController.dispose();
+    _newQuestionContentController.dispose();
+    _newQuestionReasonController.dispose();
 
     super.dispose();
   }
@@ -138,6 +173,33 @@ class _AiConversationReflectionScreenState
 
       setState(() {
         _isLoadingCandidates = false;
+      });
+    }
+  }
+
+  Future<void> _loadNewQuestions() async {
+    try {
+      final questions =
+          await _newQuestionRepository
+              .findByConversationId(
+        widget.conversation.conversationId,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _newQuestions = questions;
+        _isLoadingNewQuestions = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isLoadingNewQuestions = false;
       });
     }
   }
@@ -327,6 +389,106 @@ class _AiConversationReflectionScreenState
     }
   }
 
+  Future<void> _saveNewQuestion() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    if (_isSavingNewQuestion) {
+      return;
+    }
+
+    final content =
+        _newQuestionContentController.text.trim();
+
+    final reason =
+        _newQuestionReasonController.text.trim();
+
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '新しい問いを入力してください。',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      _isSavingNewQuestion = true;
+    });
+
+    try {
+      final now = DateTime.now();
+
+      final question = NewQuestion(
+        questionId: _uuid.v4(),
+        conversationId:
+            widget.conversation.conversationId,
+        content: content,
+        reason: reason,
+        status:
+            NewQuestionStatus.candidate,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await _newQuestionRepository.insert(
+        question,
+      );
+
+      final savedQuestion =
+          await _newQuestionRepository.findById(
+        question.questionId,
+      );
+
+      if (savedQuestion == null) {
+        throw StateError(
+          '保存した新しい問いを'
+          '確認できませんでした。',
+        );
+      }
+
+      _newQuestionContentController.clear();
+      _newQuestionReasonController.clear();
+
+      await _loadNewQuestions();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSavingNewQuestion = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '新しい問いを保存しました。',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSavingNewQuestion = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '新しい問いを保存できませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _updateKnowledgeCandidateStatus({
     required KnowledgeCandidate candidate,
     required String status,
@@ -405,6 +567,80 @@ class _AiConversationReflectionScreenState
     }
   }
 
+  Future<void> _updateNewQuestionStatus({
+    required NewQuestion question,
+    required String status,
+  }) async {
+    if (_isUpdatingNewQuestionStatus) {
+      return;
+    }
+
+    setState(() {
+      _isUpdatingNewQuestionStatus = true;
+    });
+
+    try {
+      await _newQuestionRepository.updateStatus(
+        questionId: question.questionId,
+        status: status,
+      );
+
+      final updatedQuestion =
+          await _newQuestionRepository.findById(
+        question.questionId,
+      );
+
+      if (updatedQuestion == null ||
+          updatedQuestion.status != status) {
+        throw StateError(
+          '新しい問いの状態を'
+          '更新できませんでした。',
+        );
+      }
+
+      await _loadNewQuestions();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUpdatingNewQuestionStatus = false;
+      });
+
+      final message =
+          status == NewQuestionStatus.adopted
+              ? '「この問いを次に考える」を選択しました。'
+              : '新しい問いを見送りました。';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUpdatingNewQuestionStatus = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '新しい問いの状態を'
+            '変更できませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _openKnowledgeScreen(
     KnowledgeCandidate candidate,
   ) async {
@@ -455,6 +691,69 @@ class _AiConversationReflectionScreenState
     }
   }
 
+  Future<void> _openNewQuestionInAiChat(
+    NewQuestion question,
+  ) async {
+    if (_openingQuestionId != null) {
+      return;
+    }
+
+    setState(() {
+      _openingQuestionId =
+          question.questionId;
+    });
+
+    try {
+      final session =
+          await _sessionRepository.findById(
+        widget.conversation.sessionId,
+      );
+
+      if (session == null) {
+        throw StateError(
+          '元のAI相談のSessionを'
+          '確認できませんでした。',
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) => AiChatScreen(
+            initialQuestion:
+                question.content,
+            initialProjectId:
+                session.projectId,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            '次のAI相談を'
+            '開けませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _openingQuestionId = null;
+        });
+      }
+    }
+  }
+
   String _candidateStatusName(
     KnowledgeCandidate candidate,
   ) {
@@ -473,6 +772,19 @@ class _AiConversationReflectionScreenState
 
     return KnowledgeCandidateStatus.displayName(
       candidate.status,
+    );
+  }
+
+  String _newQuestionStatusName(
+    NewQuestion question,
+  ) {
+    if (question.status ==
+        NewQuestionStatus.adopted) {
+      return '次に考えることを選択済み';
+    }
+
+    return NewQuestionStatus.displayName(
+      question.status,
     );
   }
 
@@ -609,16 +921,12 @@ class _AiConversationReflectionScreenState
                             FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
                     const Text(
                       'この回答の重要な内容を'
                       '短く整理します。',
                     ),
-
                     const SizedBox(height: 12),
-
                     TextFormField(
                       controller:
                           _summaryController,
@@ -635,9 +943,7 @@ class _AiConversationReflectionScreenState
                             true,
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     FilledButton.icon(
                       onPressed:
                           _isSavingSummary
@@ -684,16 +990,12 @@ class _AiConversationReflectionScreenState
                             FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
                     const Text(
                       'この回答から、自分の知識として'
                       '残したい内容を候補として追加します。',
                     ),
-
                     const SizedBox(height: 12),
-
                     TextFormField(
                       controller:
                           _candidateContentController,
@@ -710,9 +1012,7 @@ class _AiConversationReflectionScreenState
                             true,
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     const Text(
                       '提案Type',
                       style: TextStyle(
@@ -720,9 +1020,7 @@ class _AiConversationReflectionScreenState
                             FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
                     DropdownButtonFormField<String>(
                       initialValue:
                           _selectedSuggestedType,
@@ -757,9 +1055,7 @@ class _AiConversationReflectionScreenState
                         });
                       },
                     ),
-
                     const SizedBox(height: 16),
-
                     TextFormField(
                       controller:
                           _candidateReasonController,
@@ -778,9 +1074,7 @@ class _AiConversationReflectionScreenState
                             true,
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     FilledButton.icon(
                       onPressed:
                           _isSavingCandidate
@@ -804,9 +1098,7 @@ class _AiConversationReflectionScreenState
                             : 'Knowledge候補を追加する',
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     if (_isLoadingCandidates)
                       const Center(
                         child:
@@ -863,16 +1155,13 @@ class _AiConversationReflectionScreenState
                                           FontWeight.bold,
                                     ),
                                   ),
-
                                   const SizedBox(
                                     height: 8,
                                   ),
-
                                   Text(
                                     'Type：'
                                     '${KnowledgeType.displayName(candidate.suggestedType)}',
                                   ),
-
                                   if (candidate
                                       .reason
                                       .isNotEmpty) ...[
@@ -884,11 +1173,9 @@ class _AiConversationReflectionScreenState
                                       '${candidate.reason}',
                                     ),
                                   ],
-
                                   const SizedBox(
                                     height: 8,
                                   ),
-
                                   Text(
                                     '状態：'
                                     '${_candidateStatusName(candidate)}',
@@ -897,12 +1184,10 @@ class _AiConversationReflectionScreenState
                                             .textTheme
                                             .bodySmall,
                                   ),
-
                                   if (isCandidate) ...[
                                     const SizedBox(
                                       height: 16,
                                     ),
-
                                     FilledButton.icon(
                                       onPressed:
                                           _isUpdatingCandidateStatus
@@ -924,11 +1209,9 @@ class _AiConversationReflectionScreenState
                                         'Knowledgeにする',
                                       ),
                                     ),
-
                                     const SizedBox(
                                       height: 8,
                                     ),
-
                                     OutlinedButton.icon(
                                       onPressed:
                                           _isUpdatingCandidateStatus
@@ -951,13 +1234,11 @@ class _AiConversationReflectionScreenState
                                       ),
                                     ),
                                   ],
-
                                   if (isAccepted &&
                                       !isSavedAsKnowledge) ...[
                                     const SizedBox(
                                       height: 16,
                                     ),
-
                                     FilledButton.icon(
                                       onPressed:
                                           isOpening
@@ -988,13 +1269,11 @@ class _AiConversationReflectionScreenState
                                       ),
                                     ),
                                   ],
-
                                   if (isAccepted &&
                                       isSavedAsKnowledge) ...[
                                     const SizedBox(
                                       height: 16,
                                     ),
-
                                     const Row(
                                       children: [
                                         Icon(
@@ -1024,17 +1303,17 @@ class _AiConversationReflectionScreenState
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            const Card(
+            Card(
               child: Padding(
                 padding:
-                    EdgeInsets.all(16),
+                    const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.stretch,
                   children: [
-                    Text(
+                    const Text(
                       '新しい問い',
                       style: TextStyle(
                         fontSize: 18,
@@ -1042,12 +1321,237 @@ class _AiConversationReflectionScreenState
                             FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      '次のStepで、'
+                    const SizedBox(height: 8),
+                    const Text(
                       'この回答から生まれた'
-                      '新しい問いを追加できるようにします。',
+                      '「次に考えたい問い」を'
+                      '候補として残します。',
                     ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller:
+                          _newQuestionContentController,
+                      minLines: 3,
+                      maxLines: 8,
+                      decoration:
+                          const InputDecoration(
+                        border:
+                            OutlineInputBorder(),
+                        labelText:
+                            '問いの内容',
+                        hintText:
+                            '次に考えたい問いを'
+                            '入力してください。',
+                        alignLabelWithHint:
+                            true,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller:
+                          _newQuestionReasonController,
+                      minLines: 2,
+                      maxLines: 5,
+                      decoration:
+                          const InputDecoration(
+                        border:
+                            OutlineInputBorder(),
+                        labelText:
+                            'なぜこの問いが生まれたか',
+                        hintText:
+                            'この問いを次に考える'
+                            '理由を入力してください。',
+                        alignLabelWithHint:
+                            true,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed:
+                          _isSavingNewQuestion
+                              ? null
+                              : _saveNewQuestion,
+                      icon: _isSavingNewQuestion
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.add_outlined,
+                            ),
+                      label: Text(
+                        _isSavingNewQuestion
+                            ? '保存しています...'
+                            : '新しい問いを追加する',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (_isLoadingNewQuestions)
+                      const Center(
+                        child:
+                            CircularProgressIndicator(),
+                      )
+                    else if (_newQuestions.isEmpty)
+                      const Text(
+                        '保存された新しい問いは'
+                        'まだありません。',
+                      )
+                    else
+                      ..._newQuestions.map(
+                        (question) {
+                          final isCandidate =
+                              question.status ==
+                                  NewQuestionStatus
+                                      .candidate;
+
+                          final isAdopted =
+                              question.status ==
+                                  NewQuestionStatus
+                                      .adopted;
+
+                          final isOpeningQuestion =
+                              _openingQuestionId ==
+                                  question.questionId;
+
+                          return Card(
+                            margin:
+                                const EdgeInsets.only(
+                              bottom: 12,
+                            ),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.all(
+                                12,
+                              ),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .stretch,
+                                children: [
+                                  Text(
+                                    question.content,
+                                    style:
+                                        const TextStyle(
+                                      fontWeight:
+                                          FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (question
+                                      .reason
+                                      .isNotEmpty) ...[
+                                    const SizedBox(
+                                      height: 8,
+                                    ),
+                                    Text(
+                                      '理由：'
+                                      '${question.reason}',
+                                    ),
+                                  ],
+                                  const SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    '状態：'
+                                    '${_newQuestionStatusName(question)}',
+                                    style:
+                                        Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                  ),
+                                  if (isCandidate) ...[
+                                    const SizedBox(
+                                      height: 16,
+                                    ),
+                                    FilledButton.icon(
+                                      onPressed:
+                                          _isUpdatingNewQuestionStatus
+                                              ? null
+                                              : () {
+                                                  _updateNewQuestionStatus(
+                                                    question:
+                                                        question,
+                                                    status:
+                                                        NewQuestionStatus.adopted,
+                                                  );
+                                                },
+                                      icon: const Icon(
+                                        Icons
+                                            .arrow_forward_outlined,
+                                      ),
+                                      label:
+                                          const Text(
+                                        'この問いを次に考える',
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 8,
+                                    ),
+                                    OutlinedButton.icon(
+                                      onPressed:
+                                          _isUpdatingNewQuestionStatus
+                                              ? null
+                                              : () {
+                                                  _updateNewQuestionStatus(
+                                                    question:
+                                                        question,
+                                                    status:
+                                                        NewQuestionStatus.dismissed,
+                                                  );
+                                                },
+                                      icon: const Icon(
+                                        Icons
+                                            .do_not_disturb_alt_outlined,
+                                      ),
+                                      label:
+                                          const Text(
+                                        '見送る',
+                                      ),
+                                    ),
+                                  ],
+                                  if (isAdopted) ...[
+                                    const SizedBox(
+                                      height: 16,
+                                    ),
+                                    FilledButton.icon(
+                                      onPressed:
+                                          isOpeningQuestion
+                                              ? null
+                                              : () {
+                                                  _openNewQuestionInAiChat(
+                                                    question,
+                                                  );
+                                                },
+                                      icon: isOpeningQuestion
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child:
+                                                  CircularProgressIndicator(
+                                                strokeWidth:
+                                                    2,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons
+                                                  .chat_bubble_outline,
+                                            ),
+                                      label: Text(
+                                        isOpeningQuestion
+                                            ? '開いています...'
+                                            : 'この問いでAIと考える',
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
               ),

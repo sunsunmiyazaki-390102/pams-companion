@@ -15,7 +15,12 @@ import 'prompt_assist_screen.dart';
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({
     super.key,
+    this.initialQuestion,
+    this.initialProjectId,
   });
+
+  final String? initialQuestion;
+  final String? initialProjectId;
 
   @override
   State<AiChatScreen> createState() =>
@@ -63,6 +68,18 @@ class _AiChatScreenState
   @override
   void initState() {
     super.initState();
+
+    final initialQuestion =
+        widget.initialQuestion?.trim();
+
+    if (initialQuestion != null &&
+        initialQuestion.isNotEmpty) {
+      _questionController.text =
+          initialQuestion;
+    }
+
+    _selectedProjectId =
+        widget.initialProjectId;
 
     _projectsFuture =
         _projectRepository.findAll();

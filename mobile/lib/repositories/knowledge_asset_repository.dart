@@ -152,6 +152,30 @@ class KnowledgeAssetRepository {
         .toList();
   }
 
+  Future<List<KnowledgeAsset>> findByCreatedAtRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    final result = await database.query(
+      'knowledge_assets',
+      where: 'created_at >= ? AND created_at < ?',
+      whereArgs: [
+        start.toIso8601String(),
+        end.toIso8601String(),
+      ],
+      orderBy: 'created_at DESC',
+    );
+
+    return result
+        .map(
+          KnowledgeAsset.fromMap,
+        )
+        .toList();
+  }
+
   Future<List<KnowledgeAsset>> search(
     String keyword,
   ) async {

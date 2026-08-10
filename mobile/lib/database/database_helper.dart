@@ -7,7 +7,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 11;
+  static const int databaseVersion = 13;
 
   Database? _database;
 
@@ -59,6 +59,8 @@ class DatabaseHelper {
     await _createKnowledgeLinksTable(database);
     await _createKnowledgeCandidatesTable(database);
     await _createNewQuestionsTable(database);
+    await _createReflectionQueueTable(database);
+    await _createDailyMemoriesTable(database);
   }
 
   Future<void> _onUpgrade(
@@ -112,6 +114,18 @@ class DatabaseHelper {
         database,
       );
     } 
+  
+    if (oldVersion < 12) {
+      await _createReflectionQueueTable(
+        database,
+      );
+    }  
+  
+    if (oldVersion < 13) {
+      await _createDailyMemoriesTable(
+        database,
+      );
+    }  
   }
 
   Future<void> _createProjectsTable(
@@ -340,6 +354,34 @@ class DatabaseHelper {
     ''');
   }
 
+  Future<void> _createReflectionQueueTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE reflection_queue (
+        queue_id TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL UNIQUE,
+        priority INTEGER NOT NULL DEFAULT 1,
+        status TEXT NOT NULL DEFAULT 'waiting',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (conversation_id)
+          REFERENCES ai_conversations (conversation_id)
+          ON DELETE CASCADE
+      )
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_reflection_queue_status
+      ON reflection_queue (status)
+    ''');
+
+    await database.execute('''
+      CREATE INDEX index_reflection_queue_priority
+      ON reflection_queue (priority)
+    ''');
+  }
+
   Future<void> _addKnowledgeLinkReasonColumn(
     Database database,
   ) async {
@@ -421,5 +463,24 @@ class DatabaseHelper {
 
     await currentDatabase.close();
     _database = null;
+  }
+
+  Future<void> _createDailyMemoriesTable(
+    Database database,
+  ) async {
+    await database.execute('''
+      CREATE TABLE daily_memories (
+        memory_id TEXT PRIMARY KEY,
+        memory_date TEXT NOT NULL UNIQUE,
+        content TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await database.execute('''
+      CREATE UNIQUE INDEX index_daily_memories_memory_date
+      ON daily_memories (memory_date)
+    ''');
   }
 }

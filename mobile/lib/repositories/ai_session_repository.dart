@@ -77,4 +77,25 @@ class AiSessionRepository {
       whereArgs: [sessionId],
     );
   }
+
+  Future<void> updateProjectId({
+    required String sessionId,
+    required String projectId,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    await database.update(
+      'ai_sessions',
+      {
+        'project_id': projectId,
+        'updated_at':
+            DateTime.now().toIso8601String(),
+      },
+      where: 'session_id = ?',
+      whereArgs: [
+        sessionId,
+      ],
+    );
+  }
 }

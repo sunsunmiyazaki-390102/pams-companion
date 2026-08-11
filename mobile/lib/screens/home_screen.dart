@@ -4,7 +4,7 @@ import 'ai_chat_screen.dart';
 import 'knowledge_list_screen.dart';
 import 'knowledge_network_screen.dart';
 import 'memory_screen.dart';
-import 'project_screen.dart';
+import 'theme_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -79,12 +79,15 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _HomeMenuButton(
-                label: 'プロジェクト',
+                label: 'テーマ',
                 icon: Icons.folder_outlined,
                 onPressed: () {
-                  _openScreen(context, const ProjectScreen());
+                  _openScreen(
+                    context,
+                    const ThemeScreen(),
+                  );
                 },
-              ),
+              ),             
               const SizedBox(height: 16),
               _HomeMenuButton(
                 label: '設定',

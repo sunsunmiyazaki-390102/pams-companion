@@ -1,13 +1,15 @@
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart';
 
+import '../models/default_theme.dart';
+
 class DatabaseHelper {
   DatabaseHelper._();
 
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 13;
+  static const int databaseVersion = 14;
 
   Database? _database;
 
@@ -53,6 +55,9 @@ class DatabaseHelper {
     int version,
   ) async {
     await _createProjectsTable(database);
+
+    await _insertDefaultThemes(database);
+
     await _createAiSessionsTable(database);
     await _createAiConversationsTable(database);
     await _createKnowledgeAssetsTable(database);
@@ -126,6 +131,12 @@ class DatabaseHelper {
         database,
       );
     }  
+ 
+    if (oldVersion < 14) {
+      await _insertDefaultThemes(
+        database,
+      );
+    } 
   }
 
   Future<void> _createProjectsTable(
@@ -482,5 +493,34 @@ class DatabaseHelper {
       CREATE UNIQUE INDEX index_daily_memories_memory_date
       ON daily_memories (memory_date)
     ''');
+  }
+
+  Future<void> _insertDefaultThemes(
+    Database database,
+  ) async {
+    final now =
+        DateTime.now().toIso8601String();
+
+    for (final projectId
+        in DefaultTheme.ids) {
+      await database.insert(
+        'projects',
+        {
+          'project_id': projectId,
+          'name':
+              DefaultTheme.nameOf(
+            projectId,
+          ),
+          'description':
+              DefaultTheme.descriptionOf(
+            projectId,
+          ),
+          'created_at': now,
+          'updated_at': now,
+        },
+        conflictAlgorithm:
+            ConflictAlgorithm.ignore,
+      );
+    }
   }
 }

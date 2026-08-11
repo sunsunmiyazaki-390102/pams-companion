@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
-import 'ai_chat_screen.dart';
-import 'knowledge_list_screen.dart';
-import 'knowledge_network_screen.dart';
+import 'about_pams_screen.dart';
+import 'ai_think_screen.dart';
+import 'knowledge_grow_screen.dart';
 import 'memory_screen.dart';
 import 'theme_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+  });
 
-  void _openScreen(BuildContext context, Widget screen) {
+  void _openScreen(
+    BuildContext context,
+    Widget screen,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => screen,
@@ -22,109 +26,182 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PAMS Companion'),
+        title: const Text(
+          'PAMS Companion',
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
+        child: ListView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                '今日は何をしますか？',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+          children: [
+            const Text(
+              '今日は何をしますか？',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 32),
-              _HomeMenuButton(
-                label: 'AIに相談する',
-                icon: Icons.chat_bubble_outline,
-                onPressed: () {
-                  _openScreen(context, const AiChatScreen());
-                },
-              ),
-              const SizedBox(height: 16),
-              _HomeMenuButton(
-                label: 'AIの回答を整理する',
-                icon: Icons.fact_check_outlined,
-                onPressed: () {
-                  _openScreen(
-                    context,
-                    const KnowledgeListScreen(),
-                  );
-                },              
-              ),
-              const SizedBox(height: 16),
-              _HomeMenuButton(
-                label: '知識のつながりを見る',
-                icon: Icons.account_tree_outlined,
-                onPressed: () {
-                  _openScreen(
-                    context,
-                    const KnowledgeNetworkScreen(),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),            
-              _HomeMenuButton(
-                label: '今日の記憶',
-                icon: Icons.lightbulb_outline,
-                onPressed: () {
-                  _openScreen(context, const MemoryScreen());
-                },
-              ),
-              const SizedBox(height: 16),
-              _HomeMenuButton(
-                label: 'テーマ',
-                icon: Icons.folder_outlined,
-                onPressed: () {
-                  _openScreen(
-                    context,
-                    const ThemeScreen(),
-                  );
-                },
-              ),             
-              const SizedBox(height: 16),
-              _HomeMenuButton(
-                label: '設定',
-                icon: Icons.settings_outlined,
-                onPressed: () {
-                  _openScreen(context, const SettingsScreen());
-                },
-              ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              'AIとの対話や、そこから生まれた知を'
+              '自分の人生に利かしていきます。',
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 32),
+
+            _HomeMenuCard(
+              label: '今日の記憶',
+              description:
+                  '今日のメモやAIとの対話、'
+                  '育てた知を振り返ります。',
+              icon: Icons.today_outlined,
+              onPressed: () {
+                _openScreen(
+                  context,
+                  const MemoryScreen(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            _HomeMenuCard(
+              label: 'AIと考える',
+              description:
+                  'AIとの新しい対話を始めたり、'
+                  'これまでの対話を振り返ります。',
+              icon: Icons.chat_bubble_outline,
+              onPressed: () {
+                _openScreen(
+                  context,
+                  const AiThinkScreen(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            _HomeMenuCard(
+              label: '知を育てる',
+              description:
+                  '残した対話を振り返り、'
+                  '大切なものを自分の知へ育てます。',
+              icon: Icons.eco_outlined,
+              onPressed: () {
+                _openScreen(
+                  context,
+                  const KnowledgeGrowScreen(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            _HomeMenuCard(
+              label: 'テーマ',
+              description:
+                  '対話や知を、自分の関心ごとに'
+                  'まとめて振り返ります。',
+              icon: Icons.folder_outlined,
+              onPressed: () {
+                _openScreen(
+                  context,
+                  const ThemeScreen(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            _HomeMenuCard(
+              label: 'PAMSについて',
+              description:
+                  'PAMSの考え方や'
+                  '使い方を確認します。',
+              icon: Icons.info_outline,
+              onPressed: () {
+                _openScreen(
+                  context,
+                  const AboutPamsScreen(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
   }
 }
 
-class _HomeMenuButton extends StatelessWidget {
-  const _HomeMenuButton({
+class _HomeMenuCard extends StatelessWidget {
+  const _HomeMenuCard({
     required this.label,
+    required this.description,
     required this.icon,
     required this.onPressed,
   });
 
   final String label;
+  final String description;
   final IconData icon;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 64,
-      child: FilledButton.tonalIcon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 28),
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 18),
+    return Card(
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              CircleAvatar(
+                child: Icon(
+                  icon,
+                  size: 26,
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      description,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              const Icon(
+                Icons.chevron_right,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -6,8 +6,10 @@ import '../models/ai_response_status.dart';
 import '../models/knowledge_asset.dart';
 import '../models/knowledge_candidate.dart';
 import '../models/knowledge_type.dart';
+import '../models/reflection_queue_status.dart';
 import '../repositories/ai_conversation_repository.dart';
 import '../repositories/knowledge_asset_repository.dart';
+import '../repositories/reflection_queue_repository.dart';
 
 class AiConversationKnowledgeScreen
     extends StatefulWidget {
@@ -42,6 +44,10 @@ class _AiConversationKnowledgeScreenState
   final AiConversationRepository
       _conversationRepository =
       AiConversationRepository();
+
+  final ReflectionQueueRepository
+      _reflectionQueueRepository =
+      ReflectionQueueRepository();
 
   final Uuid _uuid = const Uuid();
 
@@ -210,6 +216,20 @@ class _AiConversationKnowledgeScreenState
             '更新できませんでした。',
           );
         }
+      }
+
+      final reflectionQueue =
+          await _reflectionQueueRepository
+              .findByConversationId(
+        widget.conversation.conversationId,
+      );
+
+      if (reflectionQueue != null) {
+        await _reflectionQueueRepository
+            .updateStatus(
+          queueId: reflectionQueue.queueId,
+          status: ReflectionQueueStatus.completed,
+        );
       }
 
       if (!mounted) {

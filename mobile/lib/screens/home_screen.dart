@@ -73,8 +73,8 @@ class HomeScreen extends StatelessWidget {
             _HomeMenuCard(
               label: 'AIと考える',
               description:
-                  'AIとの新しい対話を始めたり、'
-                  'これまでの対話を振り返ります。',
+                  'まずはAIと話してみましょう。新しい対話を始めたり、'
+                  'これまでの対話を振り返ることができます。',
               icon: Icons.chat_bubble_outline,
               onPressed: () {
                 _openScreen(

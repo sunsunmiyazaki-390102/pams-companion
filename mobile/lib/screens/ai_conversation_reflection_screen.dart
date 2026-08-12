@@ -301,7 +301,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Knowledge候補を入力してください。',
+            '知識候補を入力してください。',
           ),
         ),
       );
@@ -344,7 +344,7 @@ class _AiConversationReflectionScreenState
 
       if (savedCandidate == null) {
         throw StateError(
-          '保存したKnowledge候補を'
+          '保存した知識候補を'
           '確認できませんでした。',
         );
       }
@@ -365,7 +365,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Knowledge候補を保存しました。',
+            '知識候補を保存しました。',
           ),
         ),
       );
@@ -381,7 +381,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Knowledge候補を保存できませんでした。\n'
+            '知識候補を保存できませんでした。\n'
             '$error',
           ),
         ),
@@ -517,7 +517,7 @@ class _AiConversationReflectionScreenState
       if (updatedCandidate == null ||
           updatedCandidate.status != status) {
         throw StateError(
-          'Knowledge候補の状態を'
+          '知識候補の状態を'
           '更新できませんでした。',
         );
       }
@@ -536,8 +536,8 @@ class _AiConversationReflectionScreenState
           status ==
                   KnowledgeCandidateStatus
                       .accepted
-              ? '「Knowledgeにする」を選択しました。'
-              : 'Knowledge候補を見送りました。';
+              ? '「知識にする」を選択しました。'
+              : '知識候補を見送りました。';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -558,7 +558,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Knowledge候補の状態を'
+            '知識候補の状態を'
             '変更できませんでした。\n'
             '$error',
           ),
@@ -677,7 +677,7 @@ class _AiConversationReflectionScreenState
             .showSnackBar(
           const SnackBar(
             content: Text(
-              'Knowledgeとして保存しました。',
+              '知識として保存しました。',
             ),
           ),
         );
@@ -762,12 +762,12 @@ class _AiConversationReflectionScreenState
         _savedCandidateIds.contains(
           candidate.candidateId,
         )) {
-      return 'Knowledge保存済み';
+      return '知識として保存済み';
     }
 
     if (candidate.status ==
         KnowledgeCandidateStatus.accepted) {
-      return 'Knowledge化を選択済み';
+      return '知識化を選択済み';
     }
 
     return KnowledgeCandidateStatus.displayName(
@@ -829,7 +829,7 @@ class _AiConversationReflectionScreenState
 
             const Text(
               'AIから受け取った回答を振り返り、'
-              '要約・Knowledge候補・'
+              '要約・知識候補・'
               '新しい問いへ整理します。',
             ),
 
@@ -983,7 +983,7 @@ class _AiConversationReflectionScreenState
                       CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Knowledge候補',
+                      '知識候補',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight:
@@ -1006,7 +1006,7 @@ class _AiConversationReflectionScreenState
                         border:
                             OutlineInputBorder(),
                         hintText:
-                            'Knowledge候補を'
+                            '知識候補を'
                             '入力してください。',
                         alignLabelWithHint:
                             true,
@@ -1095,7 +1095,7 @@ class _AiConversationReflectionScreenState
                       label: Text(
                         _isSavingCandidate
                             ? '保存しています...'
-                            : 'Knowledge候補を追加する',
+                            : '知識候補を追加する',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -1107,7 +1107,7 @@ class _AiConversationReflectionScreenState
                     else if (_knowledgeCandidates
                         .isEmpty)
                       const Text(
-                        '保存されたKnowledge候補は'
+                        '保存された知識候補は'
                         'まだありません。',
                       )
                     else
@@ -1206,7 +1206,7 @@ class _AiConversationReflectionScreenState
                                       ),
                                       label:
                                           const Text(
-                                        'Knowledgeにする',
+                                        '知識にする',
                                       ),
                                     ),
                                     const SizedBox(
@@ -1265,7 +1265,7 @@ class _AiConversationReflectionScreenState
                                       label: Text(
                                         isOpening
                                             ? '開いています...'
-                                            : 'Knowledgeを確認・保存する',
+                                            : '知識を確認・保存する',
                                       ),
                                     ),
                                   ],
@@ -1285,7 +1285,7 @@ class _AiConversationReflectionScreenState
                                         ),
                                         Expanded(
                                           child: Text(
-                                            '正式なKnowledgeとして'
+                                            '正式な知識として'
                                             '保存されています。',
                                           ),
                                         ),

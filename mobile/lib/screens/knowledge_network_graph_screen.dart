@@ -64,7 +64,7 @@ class _KnowledgeNetworkGraphScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Knowledge Network Graph',
+          '知識のつながり',
         ),
       ),
       body: SafeArea(
@@ -93,7 +93,7 @@ class _KnowledgeNetworkGraphScreenState
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Knowledge Graph',
+                          '知識のつながり',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight:
@@ -105,7 +105,7 @@ class _KnowledgeNetworkGraphScreenState
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Knowledge同士の関係を'
+                    '知識同士の関係を'
                     'ノードと線で表示します。',
                   ),
                 ],
@@ -130,7 +130,7 @@ class _KnowledgeNetworkGraphScreenState
                         padding:
                             const EdgeInsets.all(24),
                         child: Text(
-                          'Knowledge Graphの'
+                          '知識のつながりの'
                           '読み込みに失敗しました。\n'
                           '${snapshot.error}',
                           textAlign:
@@ -182,7 +182,7 @@ class _KnowledgeNetworkGraphScreenState
                               padding:
                                   EdgeInsets.all(24),
                               child: Text(
-                                '表示できるKnowledgeが'
+                                '表示できる知識が'
                                 'ありません。',
                                 textAlign:
                                     TextAlign.center,
@@ -260,12 +260,12 @@ class _GraphSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             _GraphDataRow(
-              label: 'Knowledge',
+              label: '知識',
               count: knowledgeCount,
             ),
             const SizedBox(height: 12),
             _GraphDataRow(
-              label: 'KnowledgeLink',
+              label: 'つながり',
               count: linkCount,
             ),
           ],
@@ -348,7 +348,7 @@ class _KnowledgeGraphCanvas
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Knowledge Network',
+                      '知識のつながり',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight:

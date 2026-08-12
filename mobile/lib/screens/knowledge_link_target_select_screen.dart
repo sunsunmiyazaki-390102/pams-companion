@@ -96,7 +96,7 @@ class _KnowledgeLinkTargetSelectScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          '結ぶKnowledgeを選ぶ',
+          '結ぶ知識を選ぶ',
         ),
       ),
       body: SafeArea(
@@ -117,7 +117,7 @@ class _KnowledgeLinkTargetSelectScreenState
                   _search();
                 },
                 decoration: InputDecoration(
-                  hintText: 'Knowledgeを検索',
+                  hintText: '知識を検索',
                   prefixIcon: const Icon(
                     Icons.search,
                   ),
@@ -192,7 +192,7 @@ class _KnowledgeLinkTargetSelectScreenState
                         padding:
                             EdgeInsets.all(24),
                         child: Text(
-                          '結び付けられるKnowledgeが'
+                          '結び付けられる知識が'
                           'ありません。',
                           textAlign:
                               TextAlign.center,

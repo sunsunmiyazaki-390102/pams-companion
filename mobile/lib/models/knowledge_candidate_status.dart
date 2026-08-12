@@ -19,7 +19,7 @@ class KnowledgeCandidateStatus {
         return '候補';
 
       case accepted:
-        return 'Knowledge化';
+        return '知識として整理';
 
       case rejected:
         return '見送る';

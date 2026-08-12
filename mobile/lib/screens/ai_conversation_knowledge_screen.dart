@@ -130,11 +130,11 @@ class _AiConversationKnowledgeScreenState
       if (existingKnowledge != null) {
         throw StateError(
           _isCandidateMode
-              ? 'このKnowledge候補は'
-                  'すでにKnowledgeとして'
+              ? 'この知識候補は'
+                  'すでに知識として'
                   '保存されています。'
               : 'このAI相談は'
-                  'すでにKnowledgeとして'
+                  'すでに知識として'
                   '保存されています。',
         );
       }
@@ -173,7 +173,7 @@ class _AiConversationKnowledgeScreenState
 
       if (savedKnowledge == null) {
         throw StateError(
-          '保存したKnowledgeを'
+          '保存した知識を'
           '確認できませんでした。',
         );
       }
@@ -182,7 +182,7 @@ class _AiConversationKnowledgeScreenState
           savedKnowledge.sourceCandidateId !=
               candidate.candidateId) {
         throw StateError(
-          'Knowledge候補との関連を'
+          '知識候補との関連を'
           '確認できませんでした。',
         );
       }
@@ -262,7 +262,7 @@ class _AiConversationKnowledgeScreenState
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Knowledgeを保存できませんでした。\n'
+            '知識を保存できませんでした。\n'
             '$error',
           ),
         ),
@@ -281,7 +281,7 @@ class _AiConversationKnowledgeScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Knowledgeとして整理',
+          '知識として整理',
         ),
       ),
       body: SafeArea(
@@ -301,7 +301,7 @@ class _AiConversationKnowledgeScreenState
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Knowledgeを育てる',
+                      '知識を育てる',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight:
@@ -316,11 +316,11 @@ class _AiConversationKnowledgeScreenState
 
               Text(
                 _isCandidateMode
-                    ? '選択したKnowledge候補を確認し、'
+                    ? '選択した知識候補を確認し、'
                         '必要に応じて編集してから'
-                        '正式なKnowledgeとして保存します。'
+                        '正式な知識として保存します。'
                     : 'AIとの対話を振り返り、'
-                        '自分のKnowledgeとして'
+                        '自分の知識として'
                         '残したい内容を整理します。',
               ),
 
@@ -412,7 +412,7 @@ class _AiConversationKnowledgeScreenState
                               .stretch,
                       children: [
                         const Text(
-                          '選択したKnowledge候補',
+                          '選択した知識候補',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight:
@@ -466,7 +466,7 @@ class _AiConversationKnowledgeScreenState
                             .stretch,
                     children: [
                       const Text(
-                        'Knowledgeとして残す内容',
+                        '知識として残す内容',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight:
@@ -479,7 +479,7 @@ class _AiConversationKnowledgeScreenState
                       Text(
                         _isCandidateMode
                             ? '候補の内容を確認し、'
-                                '自分のKnowledgeとして'
+                                '自分の知識として'
                                 '残したい文章へ'
                                 '編集してください。'
                             : 'AIの回答をそのまま'
@@ -500,7 +500,7 @@ class _AiConversationKnowledgeScreenState
                           border:
                               OutlineInputBorder(),
                           hintText:
-                              '自分のKnowledgeとして'
+                              '自分の知識として'
                               '残したい内容を'
                               '入力してください。',
                           alignLabelWithHint:
@@ -511,7 +511,7 @@ class _AiConversationKnowledgeScreenState
                               value
                                   .trim()
                                   .isEmpty) {
-                            return 'Knowledgeとして'
+                            return '知識として'
                                 '残す内容を'
                                 '入力してください。';
                           }
@@ -536,7 +536,7 @@ class _AiConversationKnowledgeScreenState
                             .stretch,
                     children: [
                       const Text(
-                        'Knowledge Type',
+                        '知識の種類',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight:
@@ -547,7 +547,7 @@ class _AiConversationKnowledgeScreenState
                       const SizedBox(height: 8),
 
                       const Text(
-                        'このKnowledgeが'
+                        'この知識が'
                         'どの種類に近いか'
                         '選択してください。',
                       ),
@@ -613,7 +613,7 @@ class _AiConversationKnowledgeScreenState
                 label: Text(
                   _isSaving
                       ? '保存しています...'
-                      : 'Knowledgeとして保存する',
+                      : '知識として保存する',
                 ),
               ),
             ],

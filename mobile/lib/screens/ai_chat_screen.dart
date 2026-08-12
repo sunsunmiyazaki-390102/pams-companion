@@ -336,7 +336,7 @@ class _AiChatScreenState
                   padding:
                       const EdgeInsets.all(24),
                   child: Text(
-                    'Projectの読み込みに'
+                    'テーマの読み込みに'
                     '失敗しました。\n'
                     '${snapshot.error}',
                     textAlign:
@@ -400,7 +400,7 @@ class _AiChatScreenState
                               ),
                               SizedBox(height: 16),
                               Text(
-                                'Projectがありません。',
+                                'テーマがありません。',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight:
@@ -409,9 +409,8 @@ class _AiChatScreenState
                               ),
                               SizedBox(height: 8),
                               Text(
-                                '先にホーム画面の'
-                                '「プロジェクト」から'
-                                'Projectを作成してください。',
+                                '先に「テーマ」から'
+                                'テーマを作成してください。',
                                 textAlign:
                                     TextAlign.center,
                               ),
@@ -432,7 +431,7 @@ class _AiChatScreenState
                                     .stretch,
                             children: [
                               const Text(
-                                '保存先Project',
+                                '保存先テーマ',
                                 style: TextStyle(
                                   fontWeight:
                                       FontWeight.bold,
@@ -450,7 +449,7 @@ class _AiChatScreenState
                                   border:
                                       OutlineInputBorder(),
                                   labelText:
-                                      'Project',
+                                      'テーマ',
                                 ),
                                 items: projects
                                     .map(
@@ -476,7 +475,7 @@ class _AiChatScreenState
                                 },
                                 validator: (value) {
                                   if (value == null) {
-                                    return 'Projectを'
+                                    return 'テーマを'
                                         '選択してください。';
                                   }
 
@@ -538,7 +537,7 @@ class _AiChatScreenState
                                 decoration:
                                     const InputDecoration(
                                   hintText:
-                                      '例：PAMSのKnowledgeを'
+                                      '例：PAMSの知識を'
                                       'どのように整理すれば'
                                       'よいですか。',
                                   border:

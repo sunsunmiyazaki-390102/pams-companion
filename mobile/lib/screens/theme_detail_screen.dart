@@ -1147,7 +1147,7 @@ class _KnowledgeCard
                       Icons.open_in_new,
                     ),
                     label: const Text(
-                      'Knowledge詳細を開く',
+                      '知識の詳細を開く',
                     ),
                   ),
                 ],

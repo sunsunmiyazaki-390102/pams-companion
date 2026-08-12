@@ -82,7 +82,7 @@ class _KnowledgeLinkEditScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'KnowledgeLink編集',
+          '知識のつながりを編集',
         ),
       ),
       body: SafeArea(
@@ -146,7 +146,7 @@ class _KnowledgeLinkEditScreenState
               ),
               const SizedBox(height: 8),
               const Text(
-                'この二つのKnowledgeを'
+                'この二つの知識を'
                 'なぜ結び付けたのかを'
                 '自分の言葉で記録します。',
               ),

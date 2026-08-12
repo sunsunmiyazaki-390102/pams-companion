@@ -24,7 +24,7 @@ class AiResponseStatus {
         return 'あとで整理';
 
       case organized:
-        return 'Knowledge化済み';
+        return '知識として整理済み';
 
       default:
         return status;

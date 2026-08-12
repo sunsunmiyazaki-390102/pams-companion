@@ -133,7 +133,7 @@ class _KnowledgeNetworkScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Knowledgeの関係を更新しました。\n'
+            '知識の関係を更新しました。\n'
             '関係：'
             '${KnowledgeLinkType.displayName(updatedLink.linkType)}',
           ),
@@ -147,7 +147,7 @@ class _KnowledgeNetworkScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Knowledgeの関係を'
+            '知識の関係を'
             '更新できませんでした。\n'
             '$error',
           ),
@@ -197,7 +197,7 @@ class _KnowledgeNetworkScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Knowledge Network',
+          '知識のつながり',
         ),
         actions: [
           IconButton(
@@ -247,7 +247,7 @@ class _KnowledgeNetworkScreenState
                   ),
                   SizedBox(height: 16),
                   Text(
-                    '保存されているKnowledge同士の'
+                    '保存されている知識同士の'
                     '結び付きを一覧で確認します。',
                   ),
                 ],
@@ -272,7 +272,7 @@ class _KnowledgeNetworkScreenState
                         padding:
                             const EdgeInsets.all(24),
                         child: Text(
-                          'Knowledge Networkの'
+                          '知識のつながりの'
                           '読み込みに失敗しました。\n'
                           '${snapshot.error}',
                           textAlign:
@@ -359,7 +359,7 @@ class _KnowledgeNetworkScreenState
                               padding:
                                   EdgeInsets.all(24),
                               child: Text(
-                                'Knowledge同士を結ぶと、'
+                                '知識同士を結ぶと、'
                                 'ここへNetworkが'
                                 '表示されます。',
                                 textAlign:
@@ -554,7 +554,7 @@ class _KnowledgeNetworkCard
             ),
             const SizedBox(height: 20),
             const Text(
-              '接続元Knowledge',
+              'つながり元の知識',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -562,7 +562,7 @@ class _KnowledgeNetworkCard
             const SizedBox(height: 8),
             Text(
               fromKnowledge?.content ??
-                  '接続元Knowledgeが'
+                  'つながり元の知識が'
                       '見つかりません。',
             ),
             if (fromKnowledge != null) ...[
@@ -611,7 +611,7 @@ class _KnowledgeNetworkCard
             ),
             const SizedBox(height: 16),
             const Text(
-              '接続先Knowledge',
+              'つながり先の知識',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -619,7 +619,7 @@ class _KnowledgeNetworkCard
             const SizedBox(height: 8),
             Text(
               toKnowledge?.content ??
-                  '接続先Knowledgeが'
+                  'つながり先の知識が'
                       '見つかりません。',
             ),
             if (toKnowledge != null) ...[

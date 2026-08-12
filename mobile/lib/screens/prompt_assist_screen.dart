@@ -285,7 +285,7 @@ class _PromptAssistScreenState
                           border:
                               OutlineInputBorder(),
                           hintText:
-                              '例：PAMSのKnowledgeを'
+                              '例：PAMSの知識を'
                               '整理する方法',
                           alignLabelWithHint:
                               true,

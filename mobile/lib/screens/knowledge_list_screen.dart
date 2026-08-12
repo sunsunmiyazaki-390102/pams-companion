@@ -73,7 +73,7 @@ class _KnowledgeListScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Knowledge一覧'),
+        title: const Text('知識一覧'),
       ),
       body: SafeArea(
         child: Column(
@@ -92,7 +92,7 @@ class _KnowledgeListScreenState
                   _search();
                 },
                 decoration: InputDecoration(
-                  hintText: 'Knowledgeを検索',
+                  hintText: '知識を検索',
                   prefixIcon: const Icon(
                     Icons.search,
                   ),
@@ -154,8 +154,8 @@ class _KnowledgeListScreenState
 
                   if (items.isEmpty) {
                     final message = _currentKeyword.isEmpty
-                        ? 'Knowledgeはまだ保存されていません。'
-                        : '「$_currentKeyword」に一致するKnowledgeはありません。';
+                        ? '知識はまだ保存されていません。'
+                        : '「$_currentKeyword」に一致する知識はありません。';
 
                     return Center(
                       child: Padding(

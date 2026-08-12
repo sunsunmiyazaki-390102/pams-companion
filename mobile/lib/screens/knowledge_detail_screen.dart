@@ -107,7 +107,7 @@ class _KnowledgeDetailScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Knowledgeを更新しました。',
+          '知識を更新しました。',
         ),
       ),
     );
@@ -143,7 +143,7 @@ class _KnowledgeDetailScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Knowledgeと関係の種類を選択しました。',
+          '知識と関係の種類を選択しました。',
         ),
       ),
     );
@@ -249,7 +249,7 @@ class _KnowledgeDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            '結ぶKnowledgeと関係の種類を選んでください。',
+            '結ぶ知識と関係の種類を選んでください。',
           ),
         ),
       );
@@ -260,7 +260,7 @@ class _KnowledgeDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'このKnowledgeを結ぶ理由を入力してください。',
+            'この知識を結ぶ理由を入力してください。',
           ),
         ),
       );
@@ -291,7 +291,7 @@ class _KnowledgeDetailScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              '同じKnowledgeと関係のリンクは'
+              '同じ知識と関係のリンクは'
               'すでに保存されています。',
             ),
           ),
@@ -328,7 +328,7 @@ class _KnowledgeDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Knowledgeを結びました。',
+            '知識を結びました。',
           ),
         ),
       );
@@ -340,7 +340,7 @@ class _KnowledgeDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Knowledgeの保存に失敗しました。\n$error',
+            '知識の保存に失敗しました。\n$error',
           ),
         ),
       );
@@ -414,7 +414,7 @@ class _KnowledgeDetailScreenState
               Icons.arrow_back,
             ),
           ),
-          title: const Text('Knowledge詳細'),
+          title: const Text('知識の詳細'),
           actions: [
             IconButton(
               onPressed: _openEditScreen,
@@ -506,7 +506,7 @@ class _KnowledgeDetailScreenState
                 ],
                 const SizedBox(height: 32),
                 Text(
-                  'Knowledge Network',
+                  '知識のつながり',
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium,
@@ -528,7 +528,7 @@ class _KnowledgeDetailScreenState
 
                     if (snapshot.hasError) {
                       return Text(
-                        'Knowledge Networkの読み込みに'
+                        '知識のつながりの読み込みに'
                         '失敗しました。\n${snapshot.error}',
                       );
                     }
@@ -547,7 +547,7 @@ class _KnowledgeDetailScreenState
                             '結び付きはありません。',
                           ),
                           subtitle: const Text(
-                            'Knowledge同士を結ぶと'
+                            '知識同士を結ぶと'
                             'ここへ表示されます。',
                           ),
                         ),
@@ -566,8 +566,8 @@ class _KnowledgeDetailScreenState
                                 : link.fromKnowledgeId;
 
                         final directionLabel = isOutgoing
-                            ? 'このKnowledgeから結ばれています'
-                            : 'このKnowledgeへ結ばれています';
+                            ? 'この知識から結ばれています'
+                            : 'この知識へ結ばれています';
 
                         return Padding(
                           padding: const EdgeInsets.only(
@@ -599,7 +599,7 @@ class _KnowledgeDetailScreenState
                                   child: Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: Text(
-                                      '接続先Knowledgeの読み込みに'
+                                      'つながっている知識の読み込みに'
                                       '失敗しました。\n'
                                       '${knowledgeSnapshot.error}',
                                     ),
@@ -659,7 +659,7 @@ class _KnowledgeDetailScreenState
                                         ),
                                         const Divider(height: 28),
                                         const Text(
-                                          '接続先Knowledge',
+                                          'つながっている知識',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -667,7 +667,7 @@ class _KnowledgeDetailScreenState
                                         const SizedBox(height: 8),
                                         Text(
                                           connectedKnowledge?.content ??
-                                              '接続先Knowledgeが'
+                                              'つながっている知識が'
                                                   '見つかりません。',
                                         ),
                                         if (connectedKnowledge != null) ...[
@@ -697,7 +697,7 @@ class _KnowledgeDetailScreenState
                                                 MainAxisAlignment.end,
                                             children: [
                                               Text(
-                                                'このKnowledgeを開く',
+                                                'この知識を開く',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -725,14 +725,14 @@ class _KnowledgeDetailScreenState
               
                 const SizedBox(height: 32),
                 Text(
-                  'Knowledgeを結ぶ',
+                  '知識を結ぶ',
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium,
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'このKnowledgeと関係するKnowledgeを'
+                  'この知識と関係する知識を'
                   '選択します。',
                 ),
                 const SizedBox(height: 12),
@@ -746,7 +746,7 @@ class _KnowledgeDetailScreenState
                       Icons.hub_outlined,
                     ),
                     label: const Text(
-                      '結ぶKnowledgeを選ぶ',
+                      '結ぶ知識を選ぶ',
                       style: TextStyle(fontSize: 18),
                     ),
                   ),
@@ -769,7 +769,7 @@ class _KnowledgeDetailScreenState
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  '選択したKnowledge',
+                                  '選択した知識',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium,
@@ -792,7 +792,7 @@ class _KnowledgeDetailScreenState
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Knowledgeタイプ：'
+                            '知識の種類：'
                             '${KnowledgeType.displayName(selectedLinkTarget.knowledgeType)}',
                           ),
                           const SizedBox(height: 8),
@@ -835,7 +835,7 @@ class _KnowledgeDetailScreenState
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'この二つのKnowledgeを'
+                            'この二つの知識を'
                             'なぜ結び付けたのかを、'
                             '自分の言葉で残します。',
                           ),
@@ -849,7 +849,7 @@ class _KnowledgeDetailScreenState
                             decoration:
                                 const InputDecoration(
                               hintText:
-                                  '例：このKnowledgeは、'
+                                  '例：この知識は、'
                                   '元の考えをさらに発展させた'
                                   '内容だから。',
                               border:
@@ -880,7 +880,7 @@ class _KnowledgeDetailScreenState
                               label: Text(
                                 _isSavingLink
                                     ? '保存しています...'
-                                    : 'Knowledgeを結ぶ',
+                                    : '知識を結ぶ',
                                 style: const TextStyle(
                                   fontSize: 18,
                                 ),
@@ -901,7 +901,7 @@ class _KnowledgeDetailScreenState
                       Icons.edit_outlined,
                     ),
                     label: const Text(
-                      'Knowledgeを編集する',
+                      '知識を編集する',
                       style: TextStyle(fontSize: 18),
                     ),
                   ),

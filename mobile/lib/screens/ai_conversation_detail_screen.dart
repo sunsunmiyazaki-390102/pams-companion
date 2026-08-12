@@ -450,7 +450,7 @@ class _AiConversationDetailScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Knowledgeとして保存しました。',
+          '知識として保存しました。',
         ),
       ),
     );
@@ -927,7 +927,7 @@ class _AiConversationDetailScreenState
                       Icons.lightbulb_outline,
                     ),
                     label: const Text(
-                      'Knowledgeとして整理する',
+                      '知識として整理する',
                     ),
                   ),
                 ],

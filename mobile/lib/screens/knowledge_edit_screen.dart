@@ -49,7 +49,7 @@ class _KnowledgeEditScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Knowledgeの内容を入力してください。',
+            '知識の内容を入力してください。',
           ),
         ),
       );
@@ -89,7 +89,7 @@ class _KnowledgeEditScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Knowledgeを更新できませんでした。',
+            '知識を更新できませんでした。',
           ),
         ),
       );
@@ -100,7 +100,7 @@ class _KnowledgeEditScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Knowledge編集'),
+        title: const Text('知識編集'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -132,7 +132,7 @@ class _KnowledgeEditScreenState
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
-                  hintText: 'Knowledgeの内容を入力してください。',
+                  hintText: '知識の内容を入力してください。',
                 ),
               ),
               const SizedBox(height: 28),

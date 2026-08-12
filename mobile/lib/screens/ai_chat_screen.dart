@@ -171,6 +171,41 @@ class _AiChatScreenState
     );
   }
 
+  Future<void> _copyQuestionToClipboard() async {
+    final question =
+        _questionController.text.trim();
+
+    if (question.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '質問を入力してください。',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    await Clipboard.setData(
+      ClipboardData(
+        text: question,
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '質問をコピーしました。',
+        ),
+      ),
+    );
+  }
+
   String _buildSessionTitle(
     String question,
   ) {
@@ -557,6 +592,20 @@ class _AiChatScreenState
                                   return null;
                                 },
                               ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed:
+                                      _copyQuestionToClipboard,
+                                  icon: const Icon(
+                                    Icons.content_copy_outlined,
+                                  ),
+                                  label: const Text(
+                                    '質問をコピーする',
+                                  ),
+                                ),
+                              ),                           
                             ],
                           ),
                         ),

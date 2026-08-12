@@ -161,6 +161,43 @@ class _PromptAssistScreenState
       buffer.writeln(conditions);
     }
 
+    buffer.writeln();
+    buffer.writeln('次のMarkdown形式で回答してください。');
+    buffer.writeln();
+    buffer.writeln('## 回答');
+    buffer.writeln();
+    buffer.writeln(
+      '質問に対する回答を記載してください。',
+    );
+    buffer.writeln();
+    buffer.writeln('## 要約');
+    buffer.writeln();
+    buffer.writeln(
+      '回答全体の重要な内容を'
+      '簡潔にまとめてください。',
+    );
+    buffer.writeln();
+    buffer.writeln('## 知識候補');
+    buffer.writeln();
+    buffer.writeln(
+      'この対話から、今後の判断、行動、'
+      '学習又は新しい思考に役立つ知識を'
+      '複数提案してください。',
+    );
+    buffer.writeln();
+    buffer.writeln(
+      '各知識候補について、内容と、'
+      'その候補を残す理由を示してください。',
+    );
+    buffer.writeln();
+    buffer.writeln('## 次に考える問い');
+    buffer.writeln();
+    buffer.writeln(
+      'このテーマをさらに深めたり、'
+      '次の行動につなげたりするための問いを'
+      '提案してください。',
+    );
+
     setState(() {
       _generatedPromptController.text =
           buffer.toString().trim();

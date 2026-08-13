@@ -8,7 +8,6 @@ import '../models/reflection_queue_priority.dart';
 import '../models/reflection_queue_status.dart';
 import '../repositories/ai_conversation_repository.dart';
 import '../repositories/reflection_queue_repository.dart';
-import 'ai_conversation_knowledge_screen.dart';
 import 'ai_conversation_reflection_screen.dart';
 import 'waiting_ai_response_screen.dart';
 
@@ -439,46 +438,6 @@ class _AiConversationDetailScreenState
     });
 
     await _loadReflectionQueue();
-  }
-
-  Future<void> _openKnowledgeScreen() async {
-    final wasOrganized =
-        await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (context) =>
-            AiConversationKnowledgeScreen(
-          conversation: _conversation,
-        ),
-      ),
-    );
-
-    if (!mounted ||
-        wasOrganized != true) {
-      return;
-    }
-
-    final updatedConversation =
-        await _conversationRepository.findById(
-      _conversation.conversationId,
-    );
-
-    if (updatedConversation == null ||
-        !mounted) {
-      return;
-    }
-
-    setState(() {
-      _conversation =
-          updatedConversation;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          '知識として保存しました。',
-        ),
-      ),
-    );
   }
 
   Future<void> _deferConversation() async {
@@ -993,19 +952,6 @@ class _AiConversationDetailScreenState
                     ),
                     label: const Text(
                       'AI回答を整理する',
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  FilledButton.icon(
-                    onPressed:
-                        _openKnowledgeScreen,
-                    icon: const Icon(
-                      Icons.lightbulb_outline,
-                    ),
-                    label: const Text(
-                      '知識として整理する',
                     ),
                   ),
                 ],

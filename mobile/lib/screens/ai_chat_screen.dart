@@ -219,6 +219,132 @@ class _AiChatScreenState
     return '${normalizedQuestion.substring(0, 40)}…';
   }
 
+  Future<void> _saveWaitingConversation() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    if (_isSaving) {
+      return;
+    }
+
+    final projectId = _selectedProjectId;
+    final question =
+        _questionController.text.trim();
+
+    if (projectId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '保存先テーマを選択してください。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (question.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '質問を入力してください。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    final now = DateTime.now();
+    final sessionId = _uuid.v4();
+    final conversationId = _uuid.v4();
+
+    final session = AiSession(
+      sessionId: sessionId,
+      projectId: projectId,
+      title: _buildSessionTitle(
+        question,
+      ),
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    final conversation = AiConversation(
+      conversationId: conversationId,
+      sessionId: sessionId,
+      userMessage: question,
+      aiResponse: '',
+      summary: '',
+      aiProvider:
+          _selectedAiProvider ?? '',
+      responseStatus:
+          AiResponseStatus.waiting,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    try {
+      await _sessionRepository.insert(
+        session,
+      );
+
+      await _conversationRepository.insert(
+        conversation,
+      );
+
+      final savedConversation =
+          await _conversationRepository.findById(
+        conversationId,
+      );
+
+      if (savedConversation == null) {
+        throw StateError(
+          '保存したAI相談を確認できませんでした。',
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      _questionController.clear();
+      _aiResponseController.clear();
+
+      setState(() {
+        _selectedAiProvider = null;
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '回答待ちとして保存しました。\n'
+            '状態：'
+            '${AiResponseStatus.displayName(savedConversation.responseStatus)}',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSaving = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'AI相談を保存できませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _saveConversation() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -750,6 +876,22 @@ class _AiChatScreenState
                         ),
                       ),
                       const SizedBox(height: 24),
+                     
+                      OutlinedButton.icon(
+                        onPressed:
+                            _isSaving
+                                ? null
+                                : _saveWaitingConversation,
+                        icon: const Icon(
+                          Icons.hourglass_empty_outlined,
+                        ),
+                        label: const Text(
+                          '回答待ちとして保存',
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
                       FilledButton.icon(
                         onPressed:
                             _isSaving

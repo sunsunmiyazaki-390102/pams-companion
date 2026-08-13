@@ -95,6 +95,9 @@ class _AiConversationListScreenState
     String status,
   ) {
     switch (status) {
+      case AiResponseStatus.waiting:
+        return Icons.hourglass_empty_outlined;
+      
       case AiResponseStatus.deferred:
         return Icons.schedule_outlined;
 

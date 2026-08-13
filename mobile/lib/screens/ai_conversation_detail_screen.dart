@@ -10,6 +10,7 @@ import '../repositories/ai_conversation_repository.dart';
 import '../repositories/reflection_queue_repository.dart';
 import 'ai_conversation_knowledge_screen.dart';
 import 'ai_conversation_reflection_screen.dart';
+import 'waiting_ai_response_screen.dart';
 
 class AiConversationDetailScreen
     extends StatefulWidget {
@@ -88,6 +89,9 @@ class _AiConversationDetailScreenState
     String status,
   ) {
     switch (status) {
+       case AiResponseStatus.waiting:
+        return Icons.hourglass_empty_outlined;
+      
       case AiResponseStatus.deferred:
         return Icons.schedule_outlined;
 
@@ -100,6 +104,27 @@ class _AiConversationDetailScreenState
     }
   }
 
+  Future<void> _openWaitingAiResponseScreen() async {
+    final updatedConversation =
+        await Navigator.of(context).push<AiConversation>(
+      MaterialPageRoute<AiConversation>(
+        builder: (context) =>
+            WaitingAiResponseScreen(
+          conversation: _conversation,
+        ),
+      ),
+    );
+
+    if (!mounted ||
+        updatedConversation == null) {
+      return;
+    }
+
+    setState(() {
+      _conversation = updatedConversation;
+    });
+  } 
+ 
   Future<void> _loadReflectionQueue() async {
     try {
       final queue =
@@ -541,6 +566,10 @@ class _AiConversationDetailScreenState
       _conversation.updatedAt,
     );
 
+    final isWaiting =
+        _conversation.responseStatus ==
+            AiResponseStatus.waiting;  
+  
     final canDefer =
         _conversation.responseStatus ==
             AiResponseStatus.received;
@@ -683,7 +712,9 @@ class _AiConversationDetailScreenState
                     ),
                     const SizedBox(height: 12),
                     SelectableText(
-                      _conversation.aiResponse,
+                      _conversation.aiResponse.isEmpty
+                          ? 'まだAIからの回答を受け取っていません。'
+                          : _conversation.aiResponse,
                     ),
                   ],
                 ),
@@ -726,8 +757,23 @@ class _AiConversationDetailScreenState
 
             const SizedBox(height: 24),
 
+            if (isWaiting) ...[
+              FilledButton.icon(
+                onPressed:
+                    _openWaitingAiResponseScreen,
+                icon: const Icon(
+                  Icons.download_outlined,
+                ),
+                label: const Text(
+                  'AI回答を取り込む',
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
             if (canDefer)
               FilledButton.tonalIcon(
+
                 onPressed:
                     _isUpdatingStatus
                         ? null

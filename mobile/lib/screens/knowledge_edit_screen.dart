@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/knowledge_asset.dart';
+import '../models/knowledge_type.dart';
 import '../repositories/knowledge_asset_repository.dart';
+
 
 class KnowledgeEditScreen extends StatefulWidget {
   const KnowledgeEditScreen({
@@ -23,6 +25,8 @@ class _KnowledgeEditScreenState
 
   late final TextEditingController _contentController;
 
+  late String _selectedKnowledgeType;
+
   bool _isSaving = false;
 
   @override
@@ -32,6 +36,8 @@ class _KnowledgeEditScreenState
     _contentController = TextEditingController(
       text: widget.asset.content,
     );
+    _selectedKnowledgeType =
+        widget.asset.knowledgeType;  
   }
 
   @override
@@ -65,8 +71,11 @@ class _KnowledgeEditScreenState
     });
 
     try {
+    
       final updatedAsset = widget.asset.copyWith(
         content: content,
+        knowledgeType:
+            _selectedKnowledgeType,
         updatedAt: DateTime.now(),
       );
 
@@ -118,6 +127,53 @@ class _KnowledgeEditScreenState
                 '考えが深まった内容を、自分の言葉で書き加えられます。',
                 textAlign: TextAlign.center,
               ),
+              
+              const SizedBox(height: 32),
+
+              Text(
+                '分類',
+                style:
+                    Theme.of(context)
+                        .textTheme
+                        .titleMedium,
+              ),
+              const SizedBox(height: 12),
+
+              DropdownButtonFormField<String>(
+                initialValue:
+                    _selectedKnowledgeType,
+                decoration:
+                    const InputDecoration(
+                  border:
+                      OutlineInputBorder(),
+                ),
+                items:
+                    KnowledgeType.values
+                        .map(
+                  (type) =>
+                      DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(
+                      KnowledgeType
+                          .displayName(
+                        type,
+                      ),
+                    ),
+                  ),
+                )
+                        .toList(),
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+
+                  setState(() {
+                    _selectedKnowledgeType =
+                        value;
+                  });
+                },
+              ),
+
               const SizedBox(height: 32),
               Text(
                 '内容',

@@ -6,7 +6,8 @@ class KnowledgeAsset {
     required this.sourceCandidateId,
     required this.knowledgeType,
     required this.content,
-    required this.createdAt,
+    this.isArchived = false,
+    required this.createdAt,   
     required this.updatedAt,
   });
 
@@ -17,9 +18,9 @@ class KnowledgeAsset {
   // このKnowledgeがKnowledge Candidateから
   // 作られた場合、その候補IDを保持する。
   final String? sourceCandidateId;
-
   final String knowledgeType;
   final String content;
+  final bool isArchived;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -40,6 +41,11 @@ class KnowledgeAsset {
               'insight',
       content:
           map['content'] as String,
+      
+      isArchived:
+          (map['is_archived'] as int? ?? 0) ==
+              1,      
+      
       createdAt: DateTime.parse(
         map['created_at'] as String,
       ),
@@ -58,7 +64,9 @@ class KnowledgeAsset {
           sourceCandidateId,
       'knowledge_type': knowledgeType,
       'content': content,
-      'created_at':
+      'is_archived':
+          isArchived ? 1 : 0,
+      'created_at':    
           createdAt.toIso8601String(),
       'updated_at':
           updatedAt.toIso8601String(),
@@ -74,6 +82,7 @@ class KnowledgeAsset {
     bool clearSourceCandidateId = false,
     String? knowledgeType,
     String? content,
+    bool? isArchived,    
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -97,6 +106,8 @@ class KnowledgeAsset {
               this.knowledgeType,
       content:
           content ?? this.content,
+      isArchived:
+          isArchived ?? this.isArchived,
       createdAt:
           createdAt ?? this.createdAt,
       updatedAt:

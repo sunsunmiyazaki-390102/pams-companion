@@ -33,6 +33,27 @@ class KnowledgeAssetRepository {
     );
   }
 
+  Future<void> updateArchivedStatus({
+    required String knowledgeId,
+    required bool isArchived,
+  }) async {
+    final database =
+        await _databaseHelper.database;
+
+    await database.update(
+      'knowledge_assets',
+      {
+        'is_archived':
+            isArchived ? 1 : 0,
+        'updated_at':
+            DateTime.now()
+                .toIso8601String(),
+      },
+      where: 'knowledge_id = ?',
+      whereArgs: [knowledgeId],
+    );
+  }
+
   Future<void> delete(
     String knowledgeId,
   ) async {
@@ -142,7 +163,28 @@ class KnowledgeAssetRepository {
 
     final result = await database.query(
       'knowledge_assets',
+      where: 'is_archived = ?',
+      whereArgs: [0],
       orderBy: 'created_at DESC',
+    );
+
+    return result
+        .map(
+          KnowledgeAsset.fromMap,
+        )
+        .toList();
+  }
+
+  Future<List<KnowledgeAsset>>
+      findArchived() async {
+    final database =
+        await _databaseHelper.database;
+
+    final result = await database.query(
+      'knowledge_assets',
+      where: 'is_archived = ?',
+      whereArgs: [1],
+      orderBy: 'updated_at DESC',
     );
 
     return result
@@ -190,8 +232,12 @@ class KnowledgeAssetRepository {
 
     final result = await database.query(
       'knowledge_assets',
-      where: 'content LIKE ?',
-      whereArgs: ['%$normalizedKeyword%'],
+      where:
+          'is_archived = ? AND content LIKE ?',
+      whereArgs: [
+        0,
+        '%$normalizedKeyword%',
+      ],
       orderBy: 'updated_at DESC',
     );
 

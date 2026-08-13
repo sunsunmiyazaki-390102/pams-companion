@@ -9,7 +9,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 15;
+  static const int databaseVersion = 16;
 
   Database? _database;
 
@@ -143,7 +143,13 @@ class DatabaseHelper {
         database,
       );
     }  
-  }
+ 
+    if (oldVersion < 16) {
+      await _addKnowledgeAssetArchivedColumn(
+        database,
+      );
+    } 
+ }
 
   Future<void> _createProjectsTable(
     Database database,
@@ -224,7 +230,8 @@ class DatabaseHelper {
         source_candidate_id TEXT,
         knowledge_type TEXT NOT NULL DEFAULT 'insight',
         content TEXT NOT NULL,
-        created_at TEXT NOT NULL,
+        is_archived INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,       
         updated_at TEXT NOT NULL,
         FOREIGN KEY (session_id)
           REFERENCES ai_sessions (session_id)
@@ -462,6 +469,16 @@ class DatabaseHelper {
       ALTER TABLE ai_conversations
       ADD COLUMN ai_prompt
       TEXT NOT NULL DEFAULT ''
+    ''');
+  }
+
+  Future<void> _addKnowledgeAssetArchivedColumn(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE knowledge_assets
+      ADD COLUMN is_archived
+      INTEGER NOT NULL DEFAULT 0
     ''');
   }
 

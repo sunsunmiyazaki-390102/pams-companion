@@ -113,6 +113,35 @@ class _KnowledgeDetailScreenState
     );
   }
 
+  Future<void> _archiveKnowledge() async {
+    await _knowledgeRepository.updateArchivedStatus(
+      knowledgeId: _asset.knowledgeId,
+      isArchived: true,
+    );
+
+    final updatedAsset =
+        await _knowledgeRepository.findById(
+      _asset.knowledgeId,
+    );
+
+    if (updatedAsset == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _asset = updatedAsset;
+      _wasUpdated = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '知識をアーカイブしました。',
+        ),
+      ),
+    );
+  }
+
   Future<void> _openLinkTargetSelectScreen() async {
     final selectedAsset =
         await Navigator.of(context).push<KnowledgeAsset>(
@@ -906,6 +935,23 @@ class _KnowledgeDetailScreenState
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        _archiveKnowledge,
+                    icon: const Icon(
+                      Icons.archive_outlined,
+                    ),
+                    label: const Text(
+                      'アーカイブする',
+                      style:
+                          TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),              
               ],
             ),
           ),

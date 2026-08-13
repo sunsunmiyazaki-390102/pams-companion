@@ -406,7 +406,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            '新しい問いを入力してください。',
+            '次に考える問いを入力してください。',
           ),
         ),
       );
@@ -444,7 +444,7 @@ class _AiConversationReflectionScreenState
 
       if (savedQuestion == null) {
         throw StateError(
-          '保存した新しい問いを'
+          '保存した次に考える問いを'
           '確認できませんでした。',
         );
       }
@@ -465,7 +465,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            '新しい問いを保存しました。',
+            '次に考える問いを保存しました。',
           ),
         ),
       );
@@ -481,7 +481,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '新しい問いを保存できませんでした。\n'
+            '次に考える問いを保存できませんでした。\n'
             '$error',
           ),
         ),
@@ -593,7 +593,7 @@ class _AiConversationReflectionScreenState
       if (updatedQuestion == null ||
           updatedQuestion.status != status) {
         throw StateError(
-          '新しい問いの状態を'
+          '次に考える問いの状態を'
           '更新できませんでした。',
         );
       }
@@ -611,7 +611,7 @@ class _AiConversationReflectionScreenState
       final message =
           status == NewQuestionStatus.adopted
               ? '「この問いを次に考える」を選択しました。'
-              : '新しい問いを見送りました。';
+              : '次に考える問いを見送りました。';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -632,7 +632,7 @@ class _AiConversationReflectionScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '新しい問いの状態を'
+            '次に考える問いの状態を'
             '変更できませんでした。\n'
             '$error',
           ),
@@ -830,7 +830,7 @@ class _AiConversationReflectionScreenState
             const Text(
               'AIから受け取った回答を振り返り、'
               '要約・知識候補・'
-              '新しい問いへ整理します。',
+              '次に考える問いへ整理します。',
             ),
 
             const SizedBox(height: 24),
@@ -1314,7 +1314,7 @@ class _AiConversationReflectionScreenState
                       CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      '新しい問い',
+                      '次に考える問い',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight:
@@ -1324,7 +1324,7 @@ class _AiConversationReflectionScreenState
                     const SizedBox(height: 8),
                     const Text(
                       'この回答から生まれた'
-                      '「次に考えたい問い」を'
+                      '「次に考える問い」を'
                       '候補として残します。',
                     ),
                     const SizedBox(height: 12),
@@ -1340,7 +1340,7 @@ class _AiConversationReflectionScreenState
                         labelText:
                             '問いの内容',
                         hintText:
-                            '次に考えたい問いを'
+                            '次に考える問いを'
                             '入力してください。',
                         alignLabelWithHint:
                             true,
@@ -1386,7 +1386,7 @@ class _AiConversationReflectionScreenState
                       label: Text(
                         _isSavingNewQuestion
                             ? '保存しています...'
-                            : '新しい問いを追加する',
+                            : '次に考える問いを追加する',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -1397,7 +1397,7 @@ class _AiConversationReflectionScreenState
                       )
                     else if (_newQuestions.isEmpty)
                       const Text(
-                        '保存された新しい問いは'
+                        '保存された次に考える問いは'
                         'まだありません。',
                       )
                     else

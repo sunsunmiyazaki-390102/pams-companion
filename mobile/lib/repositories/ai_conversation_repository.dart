@@ -106,8 +106,10 @@ class AiConversationRepository {
       {
         'user_message':
             conversation.userMessage,
+        'ai_prompt':
+            conversation.aiPrompt,
         'ai_response':
-            conversation.aiResponse,
+            conversation.aiResponse,       
         'summary':
             conversation.summary,
         'ai_provider':

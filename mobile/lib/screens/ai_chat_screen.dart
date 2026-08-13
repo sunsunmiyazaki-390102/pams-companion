@@ -54,6 +54,7 @@ class _AiChatScreenState
 
   String? _selectedProjectId;
   String? _selectedAiProvider;
+  String? _originalQuestion;
 
   bool _isSaving = false;
 
@@ -112,23 +113,25 @@ class _AiChatScreenState
   } 
  
   Future<void> _openPromptAssist() async {
-    final prompt =
-        await Navigator.of(context).push<String>(
-      MaterialPageRoute<String>(
+    final result =
+        await Navigator.of(context)
+            .push<PromptAssistResult>(
+      MaterialPageRoute<PromptAssistResult>(
         builder: (context) =>
             const PromptAssistScreen(),
       ),
     );
 
-    if (!mounted ||
-        prompt == null ||
-        prompt.trim().isEmpty) {
+    if (!mounted || result == null) {
       return;
     }
 
     setState(() {
+      _originalQuestion =
+          result.originalQuestion.trim();
+
       _questionController.text =
-          prompt.trim();
+          result.aiPrompt.trim();
     });
   }
 
@@ -227,8 +230,18 @@ class _AiChatScreenState
     }
 
     final projectId = _selectedProjectId;
-    final question =
+
+    final aiPrompt =
         _questionController.text.trim();
+
+    final originalQuestion =
+        _originalQuestion?.trim();
+
+    final userMessage =
+        originalQuestion != null &&
+                originalQuestion.isNotEmpty
+            ? originalQuestion
+            : aiPrompt;
 
     if (projectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -241,7 +254,7 @@ class _AiChatScreenState
       return;
     }
 
-    if (question.isEmpty) {
+    if (aiPrompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -264,7 +277,7 @@ class _AiChatScreenState
       sessionId: sessionId,
       projectId: projectId,
       title: _buildSessionTitle(
-        question,
+        userMessage,
       ),
       createdAt: now,
       updatedAt: now,
@@ -273,8 +286,9 @@ class _AiChatScreenState
     final conversation = AiConversation(
       conversationId: conversationId,
       sessionId: sessionId,
-      userMessage: question,
-      aiResponse: '',
+      userMessage: userMessage,
+      aiPrompt: aiPrompt,
+      aiResponse: '',      
       summary: '',
       aiProvider:
           _selectedAiProvider ?? '',
@@ -313,9 +327,10 @@ class _AiChatScreenState
 
       setState(() {
         _selectedAiProvider = null;
+        _originalQuestion = null;
         _isSaving = false;
-      });
-
+      });    
+    
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -364,8 +379,17 @@ class _AiChatScreenState
       return;
     }
 
-    final question =
+    final aiPrompt =
         _questionController.text.trim();
+
+    final originalQuestion =
+        _originalQuestion?.trim();
+
+    final userMessage =
+        originalQuestion != null &&
+                originalQuestion.isNotEmpty
+            ? originalQuestion
+            : aiPrompt;
 
     final aiResponse =
         _aiResponseController.text.trim();
@@ -382,7 +406,7 @@ class _AiChatScreenState
       sessionId: sessionId,
       projectId: projectId,
       title: _buildSessionTitle(
-        question,
+        userMessage,
       ),
       createdAt: now,
       updatedAt: now,
@@ -391,8 +415,9 @@ class _AiChatScreenState
     final conversation = AiConversation(
       conversationId: conversationId,
       sessionId: sessionId,
-      userMessage: question,
-      aiResponse: aiResponse,
+      userMessage: userMessage,
+      aiPrompt: aiPrompt,
+      aiResponse: aiResponse,      
       summary: '',
       aiProvider: aiProvider,
       responseStatus:
@@ -430,8 +455,9 @@ class _AiChatScreenState
 
       setState(() {
         _selectedAiProvider = null;
+        _originalQuestion = null;
         _isSaving = false;
-      });
+      });    
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

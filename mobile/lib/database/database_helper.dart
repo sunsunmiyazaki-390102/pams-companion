@@ -9,7 +9,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const String databaseName = 'pams_companion.db';
-  static const int databaseVersion = 14;
+  static const int databaseVersion = 15;
 
   Database? _database;
 
@@ -137,6 +137,12 @@ class DatabaseHelper {
         database,
       );
     } 
+  
+    if (oldVersion < 15) {
+      await _addAiConversationPromptColumn(
+        database,
+      );
+    }  
   }
 
   Future<void> _createProjectsTable(
@@ -178,7 +184,8 @@ class DatabaseHelper {
         conversation_id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
         user_message TEXT NOT NULL,
-        ai_response TEXT NOT NULL,
+        ai_prompt TEXT NOT NULL DEFAULT '',
+        ai_response TEXT NOT NULL,       
         summary TEXT,
         ai_provider TEXT,
         question_topic TEXT,
@@ -445,6 +452,16 @@ class DatabaseHelper {
     await database.execute('''
       ALTER TABLE ai_conversations
       ADD COLUMN question_conditions TEXT
+    ''');
+  }
+
+  Future<void> _addAiConversationPromptColumn(
+    Database database,
+  ) async {
+    await database.execute('''
+      ALTER TABLE ai_conversations
+      ADD COLUMN ai_prompt
+      TEXT NOT NULL DEFAULT ''
     ''');
   }
 

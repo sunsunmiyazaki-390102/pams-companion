@@ -3,6 +3,7 @@ class AiConversation {
     required this.conversationId,
     required this.sessionId,
     required this.userMessage,
+    required this.aiPrompt,
     required this.aiResponse,
     required this.summary,
     required this.aiProvider,
@@ -14,6 +15,7 @@ class AiConversation {
   final String conversationId;
   final String sessionId;
   final String userMessage;
+  final String aiPrompt;
   final String aiResponse;
   final String summary;
   final String aiProvider;
@@ -25,6 +27,7 @@ class AiConversation {
     String? conversationId,
     String? sessionId,
     String? userMessage,
+    String? aiPrompt,
     String? aiResponse,
     String? summary,
     String? aiProvider,
@@ -36,6 +39,7 @@ class AiConversation {
       conversationId: conversationId ?? this.conversationId,
       sessionId: sessionId ?? this.sessionId,
       userMessage: userMessage ?? this.userMessage,
+      aiPrompt: aiPrompt ?? this.aiPrompt,
       aiResponse: aiResponse ?? this.aiResponse,
       summary: summary ?? this.summary,
       aiProvider: aiProvider ?? this.aiProvider,
@@ -52,6 +56,7 @@ class AiConversation {
       'conversation_id': conversationId,
       'session_id': sessionId,
       'user_message': userMessage,
+      'ai_prompt': aiPrompt,
       'ai_response': aiResponse,
       'summary': summary,
       'ai_provider': aiProvider,
@@ -68,6 +73,7 @@ class AiConversation {
       conversationId: map['conversation_id'] as String,
       sessionId: map['session_id'] as String,
       userMessage: map['user_message'] as String,
+      aiPrompt: map['ai_prompt'] as String? ?? '',
       aiResponse: map['ai_response'] as String,
       summary: map['summary'] as String? ?? '',
       aiProvider: map['ai_provider'] as String? ?? '',

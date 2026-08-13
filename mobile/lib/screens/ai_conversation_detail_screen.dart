@@ -703,6 +703,38 @@ class _AiConversationDetailScreenState
                           .stretch,
                   children: [
                     const Text(
+                      'AIへ渡した文章',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SelectableText(
+                      _conversation.aiPrompt.isEmpty
+                          ? 'この対話では保存されていません。'
+                          : _conversation.aiPrompt,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),           
+           
+            const SizedBox(height: 16),
+
+            Card(
+              child: Padding(
+                padding:
+                    const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment
+                          .stretch,
+                  children: [
+                    const Text(
                       'AIからの回答',
                       style: TextStyle(
                         fontSize: 18,

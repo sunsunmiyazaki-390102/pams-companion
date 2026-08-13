@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+class PromptAssistResult {
+  const PromptAssistResult({
+    required this.originalQuestion,
+    required this.aiPrompt,
+  });
+
+  final String originalQuestion;
+  final String aiPrompt;
+}
+
 class PromptAssistScreen
     extends StatefulWidget {
   const PromptAssistScreen({
@@ -232,15 +242,23 @@ class _PromptAssistScreenState
   }
 
   void _useGeneratedPrompt() {
-    final prompt =
+    final originalQuestion =
+        _topicController.text.trim();
+
+    final aiPrompt =
         _generatedPromptController.text.trim();
 
-    if (prompt.isEmpty) {
+    if (originalQuestion.isEmpty ||
+        aiPrompt.isEmpty) {
       return;
     }
 
     Navigator.of(context).pop(
-      prompt,
+      PromptAssistResult(
+        originalQuestion:
+            originalQuestion,
+        aiPrompt: aiPrompt,
+      ),
     );
   }
 

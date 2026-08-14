@@ -59,9 +59,9 @@ class AiThinkScreen extends StatelessWidget {
 
             _AiThinkMenuCard(
               icon: Icons.add_comment_outlined,
-              title: '新しくAIと考える',
+              title: 'AIと考える',
               description:
-                  'AIとの新しい対話を始めます。',
+                  'AIとの対話を始めます。',
               onPressed: () {
                 _openScreen(
                   context,

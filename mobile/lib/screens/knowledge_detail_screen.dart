@@ -142,6 +142,35 @@ class _KnowledgeDetailScreenState
     );
   }
 
+  Future<void> _restoreKnowledge() async {
+    await _knowledgeRepository.updateArchivedStatus(
+      knowledgeId: _asset.knowledgeId,
+      isArchived: false,
+    );
+
+    final updatedAsset =
+        await _knowledgeRepository.findById(
+      _asset.knowledgeId,
+    );
+
+    if (updatedAsset == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _asset = updatedAsset;
+      _wasUpdated = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '知識を復元しました。',
+        ),
+      ),
+    );
+  }
+
   Future<void> _openLinkTargetSelectScreen() async {
     final selectedAsset =
         await Navigator.of(context).push<KnowledgeAsset>(
@@ -941,17 +970,25 @@ class _KnowledgeDetailScreenState
                   height: 52,
                   child: OutlinedButton.icon(
                     onPressed:
-                        _archiveKnowledge,
-                    icon: const Icon(
-                      Icons.archive_outlined,
+                        _asset.isArchived
+                            ? _restoreKnowledge
+                            : _archiveKnowledge,
+                    icon: Icon(
+                      _asset.isArchived
+                          ? Icons.unarchive_outlined
+                          : Icons.archive_outlined,
                     ),
-                    label: const Text(
-                      'アーカイブする',
+                    label: Text(
+                      _asset.isArchived
+                          ? '復元する'
+                          : 'アーカイブする',
                       style:
-                          TextStyle(fontSize: 18),
+                          const TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
                   ),
-                ),              
+                ),
               ],
             ),
           ),

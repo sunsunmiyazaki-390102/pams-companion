@@ -248,4 +248,34 @@ class KnowledgeAssetRepository {
         .toList();
   }
 
+  Future<List<KnowledgeAsset>> searchArchived(
+    String keyword,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final normalizedKeyword = keyword.trim();
+
+    if (normalizedKeyword.isEmpty) {
+      return findArchived();
+    }
+
+    final result = await database.query(
+      'knowledge_assets',
+      where:
+          'is_archived = ? AND content LIKE ?',
+      whereArgs: [
+        1,
+        '%$normalizedKeyword%',
+      ],
+      orderBy: 'updated_at DESC',
+    );
+
+    return result
+        .map(
+          KnowledgeAsset.fromMap,
+        )
+        .toList();
+  }
+
 }

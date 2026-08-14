@@ -5,7 +5,12 @@ import '../repositories/knowledge_asset_repository.dart';
 import 'knowledge_detail_screen.dart';
 
 class KnowledgeListScreen extends StatefulWidget {
-  const KnowledgeListScreen({super.key});
+  const KnowledgeListScreen({
+    super.key,
+    this.showArchived = false,
+  });
+
+  final bool showArchived;
 
   @override
   State<KnowledgeListScreen> createState() =>
@@ -24,11 +29,25 @@ class _KnowledgeListScreenState
 
   String _currentKeyword = '';
 
+  Future<List<KnowledgeAsset>> _loadKnowledge(
+    String keyword,
+  ) {
+    if (widget.showArchived) {
+      return keyword.isEmpty
+          ? _repository.findArchived()
+          : _repository.searchArchived(keyword);
+    }
+
+    return keyword.isEmpty
+        ? _repository.findAll()
+        : _repository.search(keyword);
+  }
+
   @override
   void initState() {
     super.initState();
 
-    _knowledgeFuture = _repository.findAll();
+    _knowledgeFuture = _loadKnowledge('');
   }
 
   @override
@@ -39,9 +58,9 @@ class _KnowledgeListScreenState
 
   Future<void> _reload() async {
     setState(() {
-      _knowledgeFuture = _currentKeyword.isEmpty
-          ? _repository.findAll()
-          : _repository.search(_currentKeyword);
+      _knowledgeFuture = _loadKnowledge(
+        _currentKeyword,
+      );
     });
   }
 
@@ -52,9 +71,8 @@ class _KnowledgeListScreenState
 
     setState(() {
       _currentKeyword = keyword;
-      _knowledgeFuture = keyword.isEmpty
-          ? _repository.findAll()
-          : _repository.search(keyword);
+      _knowledgeFuture =
+          _loadKnowledge(keyword);   
     });
   }
 
@@ -65,15 +83,49 @@ class _KnowledgeListScreenState
 
     setState(() {
       _currentKeyword = '';
-      _knowledgeFuture = _repository.findAll();
+      _knowledgeFuture = _loadKnowledge('');
     });
+  }
+
+  Future<void> _openArchivedKnowledge() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            const KnowledgeListScreen(
+          showArchived: true,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _reload();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('知識一覧'),
+        title: Text(
+          widget.showArchived
+              ? 'アーカイブ済み知識'
+              : '知識一覧',
+        ),
+        actions: widget.showArchived
+            ? null
+            : [
+                IconButton(
+                  onPressed:
+                      _openArchivedKnowledge,
+                  tooltip:
+                      'アーカイブ済み知識',
+                  icon: const Icon(
+                    Icons.archive_outlined,
+                  ),
+                ),
+              ],
       ),
       body: SafeArea(
         child: Column(
@@ -153,10 +205,16 @@ class _KnowledgeListScreenState
                   final items = snapshot.data ?? [];
 
                   if (items.isEmpty) {
-                    final message = _currentKeyword.isEmpty
-                        ? '知識はまだ保存されていません。'
-                        : '「$_currentKeyword」に一致する知識はありません。';
-
+                    final message =
+                        _currentKeyword.isEmpty
+                            ? widget.showArchived
+                                ? 'アーカイブ済みの知識はありません。'
+                                : '知識はまだ保存されていません。'
+                            : widget.showArchived
+                                ? '「$_currentKeyword」に一致する'
+                                    'アーカイブ済み知識はありません。'
+                                : '「$_currentKeyword」に一致する'
+                                    '知識はありません。';
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),

@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/knowledge_asset.dart';
@@ -140,6 +144,68 @@ class _KnowledgeDetailScreenState
     return '$year/$month/$day $hour:$minute';
   }
 
+  Future<void> _exportKnowledge() async {
+    final projectName =
+        _projectName ?? '未設定';
+
+    final markdown = '''
+# PAMS Knowledge
+
+## 内容
+${_asset.content}
+
+## 分類
+${KnowledgeType.displayName(_asset.knowledgeType)}
+
+## プロジェクト
+$projectName
+
+## 作成日時
+${_formatDateTime(_asset.createdAt)}
+
+## 更新日時
+${_formatDateTime(_asset.updatedAt)}
+''';
+
+    try {
+      final directory =
+          await getTemporaryDirectory();
+
+      final fileName =
+          'pams-knowledge-${_asset.knowledgeId}.md';
+
+      final file = File(
+        '${directory.path}/$fileName',
+      );
+
+      await file.writeAsString(
+        markdown,
+      );
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [
+            XFile(file.path),
+          ],
+          subject: 'PAMS Knowledge',
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '知識をエクスポートできませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    }
+  } 
+ 
   Future<void> _openEditScreen() async {
     final updatedAsset =
         await Navigator.of(context).push<KnowledgeAsset>(
@@ -1047,6 +1113,23 @@ class _KnowledgeDetailScreenState
                           : 'アーカイブする',
                       style:
                           const TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: _exportKnowledge,
+                    icon: const Icon(
+                      Icons.ios_share_outlined,
+                    ),
+                    label: const Text(
+                      'エクスポートする',
+                      style: TextStyle(
                         fontSize: 18,
                       ),
                     ),

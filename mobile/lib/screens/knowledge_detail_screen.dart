@@ -5,6 +5,8 @@ import '../models/knowledge_asset.dart';
 import '../models/knowledge_link.dart';
 import '../models/knowledge_link_type.dart';
 import '../models/knowledge_type.dart';
+import '../repositories/ai_session_repository.dart';
+import '../repositories/project_repository.dart';
 import '../repositories/knowledge_asset_repository.dart';
 import '../repositories/knowledge_link_repository.dart';
 import 'knowledge_edit_screen.dart';
@@ -36,6 +38,15 @@ class _KnowledgeDetailScreenState
   final KnowledgeAssetRepository _knowledgeRepository =
       KnowledgeAssetRepository();
 
+  final AiSessionRepository _sessionRepository =
+      AiSessionRepository();
+
+  final ProjectRepository _projectRepository =
+      ProjectRepository();
+
+  String? _projectName;
+  bool _isLoadingProject = true; 
+ 
   late Future<List<KnowledgeLink>>
       _knowledgeLinksFuture;
 
@@ -50,9 +61,9 @@ class _KnowledgeDetailScreenState
   @override
   void initState() {
     super.initState();
-
     _asset = widget.asset;
     _knowledgeLinksFuture = _loadKnowledgeLinks();
+    _loadProject();  
   }
 
   @override
@@ -68,6 +79,50 @@ class _KnowledgeDetailScreenState
     );
   }
 
+  Future<void> _loadProject() async {
+    try {
+      final session =
+          await _sessionRepository.findById(
+        _asset.sessionId,
+      );
+
+      if (session == null) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _projectName = null;
+          _isLoadingProject = false;
+        });
+        return;
+      }
+
+      final project =
+          await _projectRepository.findById(
+        session.projectId,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _projectName = project?.name;
+        _isLoadingProject = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _projectName = null;
+        _isLoadingProject = false;
+      });
+    }
+  } 
+ 
   String _formatDateTime(DateTime value) {
     final localValue = value.toLocal();
 
@@ -551,6 +606,14 @@ class _KnowledgeDetailScreenState
                   ),
                 ),
                 const SizedBox(height: 12),
+                _DetailRow(
+                  label: 'プロジェクト',
+                  value: _isLoadingProject
+                      ? '読み込み中...'
+                      : _projectName ??
+                          '確認できません',
+                ),
+                const SizedBox(height: 12),              
                 _DetailRow(
                   label: 'Session ID',
                   value: _asset.sessionId,

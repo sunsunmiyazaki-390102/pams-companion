@@ -44,6 +44,28 @@ class ProjectRepository {
     );
   }
 
+  Future<Project?> findById(
+    String projectId,
+  ) async {
+    final database =
+        await _databaseHelper.database;
+
+    final maps = await database.query(
+      'projects',
+      where: 'project_id = ?',
+      whereArgs: [projectId],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return Project.fromMap(
+      maps.first,
+    );
+  }
+
   Future<List<Project>> findAll() async {
     final database = await _databaseHelper.database;
 

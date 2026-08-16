@@ -862,47 +862,36 @@ class _AiConversationReflectionScreenState
             const SizedBox(height: 16),
 
             Card(
-              child: Padding(
-                padding:
-                    const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'AIからの回答',
-                            style: TextStyle(
-                              fontWeight:
-                                  FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          conversation
-                                  .aiProvider
-                                  .isEmpty
-                              ? 'AI：未入力'
-                              : 'AI：'
-                                  '${conversation.aiProvider}',
-                          style:
-                              Theme.of(context)
-                                  .textTheme
-                                  .bodySmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SelectableText(
+              child: ExpansionTile(
+                title: const Text(
+                  'AIからの回答',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  conversation.aiProvider.isEmpty
+                      ? 'AI：未入力'
+                      : 'AI：${conversation.aiProvider}',
+                ),
+                childrenPadding:
+                    const EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  16,
+                ),
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
                       conversation.aiResponse,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-
+            ),          
+          
             const SizedBox(height: 16),
 
             Card(

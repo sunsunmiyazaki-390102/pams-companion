@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/ai_conversation.dart';
 import '../models/ai_response_status.dart';
@@ -41,6 +42,44 @@ class _WaitingAiResponseScreenState
   void dispose() {
     _responseController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pasteResponseFromClipboard() async {
+    final clipboardData =
+        await Clipboard.getData(
+      Clipboard.kTextPlain,
+    );
+
+    final text =
+        clipboardData?.text?.trim();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (text == null || text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'クリップボードに'
+            '貼り付けできる文章がありません。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _responseController.text = text;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'AIの回答を貼り付けました。',
+        ),
+      ),
+    );
   }
 
   Future<void> _saveResponse() async {
@@ -137,9 +176,9 @@ class _WaitingAiResponseScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'AI回答を取り込む',
+          'AIの回答を保存する',
         ),
-      ),
+      ),     
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -212,6 +251,7 @@ class _WaitingAiResponseScreenState
                 },
               ),
               const SizedBox(height: 24),
+             
               const Text(
                 'AIからの回答',
                 style: TextStyle(
@@ -219,6 +259,28 @@ class _WaitingAiResponseScreenState
                 ),
               ),
               const SizedBox(height: 8),
+              const Text(
+                'AIで回答をコピーしたあと、'
+                'ここへ貼り付けます。',
+              ),
+              const SizedBox(height: 12),
+
+              SizedBox(
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed:
+                      _pasteResponseFromClipboard,
+                  icon: const Icon(
+                    Icons.content_paste_outlined,
+                  ),
+                  label: const Text(
+                    'クリップボードから貼り付ける',
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
               TextField(
                 controller:
                     _responseController,
@@ -227,17 +289,20 @@ class _WaitingAiResponseScreenState
                 decoration:
                     const InputDecoration(
                   hintText:
-                      'AIから受け取った回答を'
-                      'ここへ貼り付けてください。',
+                      'AIから受け取った回答が'
+                      'ここに入ります。',
                   border:
                       OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
               ),
+
               const SizedBox(height: 12),
+
               const Text(
                 '回答は原文のまま保存します。',
               ),
+
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed:
@@ -259,8 +324,8 @@ class _WaitingAiResponseScreenState
                 label: Text(
                   _isSaving
                       ? '保存しています...'
-                      : 'AI回答を保存する',
-                ),
+                      : 'この回答を保存する',
+                ),               
               ),
             ],
           ),

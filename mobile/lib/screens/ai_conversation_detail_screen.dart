@@ -749,6 +749,7 @@ class _AiConversationDetailScreenState
             const SizedBox(height: 24),
 
             if (isWaiting) ...[
+            
               FilledButton.icon(
                 onPressed:
                     _openWaitingAiResponseScreen,
@@ -756,9 +757,10 @@ class _AiConversationDetailScreenState
                   Icons.download_outlined,
                 ),
                 label: const Text(
-                  'AI回答を取り込む',
+                  'AIからの回答を受け取る',
                 ),
-              ),
+              ),            
+            
               const SizedBox(height: 12),
             ],
 

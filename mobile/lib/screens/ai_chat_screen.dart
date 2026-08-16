@@ -53,18 +53,9 @@ class _AiChatScreenState
   late Future<List<Project>> _projectsFuture;
 
   String? _selectedProjectId;
-  String? _selectedAiProvider;
   String? _originalQuestion;
 
   bool _isSaving = false;
-
-  static const List<String> _aiProviders = [
-    'ChatGPT',
-    'Gemini',
-    'Claude',
-    'Copilot',
-    'その他',
-  ];
 
   @override
   void initState() {
@@ -110,8 +101,8 @@ class _AiChatScreenState
             const AiConversationListScreen(),
       ),
     );
-  } 
- 
+  }
+
   Future<void> _openPromptAssist() async {
     final result =
         await Navigator.of(context)
@@ -133,46 +124,7 @@ class _AiChatScreenState
       _questionController.text =
           result.aiPrompt.trim();
     });
-  }
-
-  Future<void> _pasteAiResponseFromClipboard() async {
-    final clipboardData =
-        await Clipboard.getData(
-      Clipboard.kTextPlain,
-    );
-
-    final text =
-        clipboardData?.text?.trim();
-
-    if (!mounted) {
-      return;
-    }
-
-    if (text == null || text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'クリップボードに'
-            '貼り付けできる文章がありません。',
-          ),
-        ),
-      );
-
-      return;
-    }
-
-    setState(() {
-      _aiResponseController.text = text;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'AIの回答を貼り付けました。',
-        ),
-      ),
-    );
-  }
+  } 
 
   Future<void> _copyQuestionToClipboard() async {
     final question =
@@ -290,8 +242,7 @@ class _AiChatScreenState
       aiPrompt: aiPrompt,
       aiResponse: '',      
       summary: '',
-      aiProvider:
-          _selectedAiProvider ?? '',
+      aiProvider: '',
       responseStatus:
           AiResponseStatus.waiting,
       createdAt: now,
@@ -323,151 +274,20 @@ class _AiChatScreenState
       }
 
       _questionController.clear();
-      _aiResponseController.clear();
 
       setState(() {
-        _selectedAiProvider = null;
         _originalQuestion = null;
         _isSaving = false;
       });    
     
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            '回答待ちとして保存しました。\n'
-            '状態：'
-            '${AiResponseStatus.displayName(savedConversation.responseStatus)}',
+            '質問を保存しました。',
           ),
         ),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _isSaving = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'AI相談を保存できませんでした。\n'
-            '$error',
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _saveConversation() async {
-    FocusManager.instance.primaryFocus?.unfocus();
-
-    final isValid =
-        _formKey.currentState?.validate() ??
-            false;
-
-    if (!isValid || _isSaving) {
-      return;
-    }
-
-    final projectId = _selectedProjectId;
-    final aiProvider = _selectedAiProvider;
-
-    if (projectId == null ||
-        aiProvider == null) {
-      return;
-    }
-
-    final aiPrompt =
-        _questionController.text.trim();
-
-    final originalQuestion =
-        _originalQuestion?.trim();
-
-    final userMessage =
-        originalQuestion != null &&
-                originalQuestion.isNotEmpty
-            ? originalQuestion
-            : aiPrompt;
-
-    final aiResponse =
-        _aiResponseController.text.trim();
-
-    setState(() {
-      _isSaving = true;
-    });
-
-    final now = DateTime.now();
-    final sessionId = _uuid.v4();
-    final conversationId = _uuid.v4();
-
-    final session = AiSession(
-      sessionId: sessionId,
-      projectId: projectId,
-      title: _buildSessionTitle(
-        userMessage,
-      ),
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    final conversation = AiConversation(
-      conversationId: conversationId,
-      sessionId: sessionId,
-      userMessage: userMessage,
-      aiPrompt: aiPrompt,
-      aiResponse: aiResponse,      
-      summary: '',
-      aiProvider: aiProvider,
-      responseStatus:
-          AiResponseStatus.received,
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    try {
-      await _sessionRepository.insert(
-        session,
-      );
-
-      await _conversationRepository.insert(
-        conversation,
-      );
-
-      final savedConversation =
-          await _conversationRepository.findById(
-        conversationId,
-      );
-
-      if (savedConversation == null) {
-        throw StateError(
-          '保存したAI相談を確認できませんでした。',
-        );
-      }
-
-      if (!mounted) {
-        return;
-      }
-
-      _questionController.clear();
-      _aiResponseController.clear();
-
-      setState(() {
-        _selectedAiProvider = null;
-        _originalQuestion = null;
-        _isSaving = false;
-      });    
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'AI相談を保存しました。\n'
-            '状態：'
-            '${AiResponseStatus.displayName(savedConversation.responseStatus)}',
-          ),
-        ),
-      );
+      );     
+     
     } catch (error) {
       if (!mounted) {
         return;
@@ -674,6 +494,7 @@ class _AiChatScreenState
                         ),
                       ),
                       const SizedBox(height: 16),
+                     
                       Card(
                         child: Padding(
                           padding:
@@ -686,28 +507,27 @@ class _AiChatScreenState
                                     .stretch,
                             children: [
                               const Text(
-                                'あなたの質問',
+                                'AIへの質問をつくる',
                                 style: TextStyle(
                                   fontWeight:
                                       FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(
-                                height: 8,
-                              ),
+                              const SizedBox(height: 8),
                               const Text(
-                                'AIへ相談した内容を'
-                                '入力してください。',
+                                'まず、何についてAIと'
+                                '考えたいかを整理します。',
                               ),
-                              const SizedBox(
-                                height: 12,
-                              ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: _openPromptAssist,
+                              const SizedBox(height: 16),
+
+                              SizedBox(
+                                height: 48,
+                                child: FilledButton.icon(
+                                  onPressed:
+                                      _openPromptAssist,
                                   icon: const Icon(
-                                    Icons.auto_awesome_outlined,
+                                    Icons
+                                        .auto_awesome_outlined,
                                   ),
                                   label: const Text(
                                     '質問作成を手伝ってもらう',
@@ -715,18 +535,52 @@ class _AiChatScreenState
                                 ),
                               ),
 
+                              if (_originalQuestion !=
+                                      null &&
+                                  _originalQuestion!
+                                      .trim()
+                                      .isNotEmpty) ...[
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'あなたが考えたいこと',
+                                  style: TextStyle(
+                                    fontWeight:
+                                        FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SelectableText(
+                                  _originalQuestion!,
+                                ),
+                              ],
+
+                              const SizedBox(height: 20),
+                              const Text(
+                                'AIへ渡す文章',
+                                style: TextStyle(
+                                  fontWeight:
+                                      FontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 8),
+                              const Text(
+                                '質問作成後の文章を'
+                                '確認できます。'
+                                '自分で直接入力することも'
+                                'できます。',
+                              ),
+                              const SizedBox(height: 12),
+
                               TextFormField(
                                 controller:
                                     _questionController,
-                                minLines: 3,
-                                maxLines: 8,
+                                minLines: 5,
+                                maxLines: 12,
                                 decoration:
                                     const InputDecoration(
                                   hintText:
-                                      '例：PAMSの知識を'
-                                      'どのように整理すれば'
-                                      'よいですか。',
+                                      'AIへ渡す文章を'
+                                      'ここに入力します。',
                                   border:
                                       OutlineInputBorder(),
                                   alignLabelWithHint:
@@ -737,208 +591,78 @@ class _AiChatScreenState
                                       value
                                           .trim()
                                           .isEmpty) {
-                                    return '質問を'
+                                    return 'AIへ渡す文章を'
                                         '入力してください。';
                                   }
 
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 8),
+
+                              const SizedBox(height: 12),
+
                               Align(
-                                alignment: Alignment.centerRight,
+                                alignment:
+                                    Alignment.centerRight,
                                 child: TextButton.icon(
                                   onPressed:
                                       _copyQuestionToClipboard,
                                   icon: const Icon(
-                                    Icons.content_copy_outlined,
+                                    Icons
+                                        .content_copy_outlined,
                                   ),
                                   label: const Text(
-                                    '質問をコピーする',
+                                    'AIへ渡す文章をコピーする',
                                   ),
                                 ),
-                              ),                           
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Card(
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.all(
-                            16,
-                          ),
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment
-                                    .stretch,
-                            children: [
-                              const Text(
-                                'AIからの回答',
-                                style: TextStyle(
-                                  fontWeight:
-                                      FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              const Text(
-                                'AIから受け取った回答を'
-                                '貼り付けてください。',
-                              ),
-                              const SizedBox(height: 12),
-
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed:
-                                      _pasteAiResponseFromClipboard,
-                                  icon: const Icon(
-                                    Icons.content_paste_outlined,
-                                  ),
-                                  label: const Text(
-                                    'クリップボードから貼り付ける',
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 8),
-                            
-                              TextFormField(
-                                controller:
-                                    _aiResponseController,
-                                minLines: 6,
-                                maxLines: 16,
-                                decoration:
-                                    const InputDecoration(
-                                  hintText:
-                                      'ここへAIの回答を'
-                                      '貼り付けます。',
-                                  border:
-                                      OutlineInputBorder(),
-                                  alignLabelWithHint:
-                                      true,
-                                ),
-                                validator: (value) {
-                                  if (value == null ||
-                                      value
-                                          .trim()
-                                          .isEmpty) {
-                                    return 'AIの回答を'
-                                        '入力してください。';
-                                  }
-
-                                  return null;
-                                },
                               ),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Card(
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.all(
-                            16,
-                          ),
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment
-                                    .stretch,
-                            children: [
-                              const Text(
-                                '利用したAI',
-                                style: TextStyle(
-                                  fontWeight:
-                                      FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 12,
-                              ),
-                              DropdownButtonFormField<
-                                  String>(
-                                initialValue:
-                                    _selectedAiProvider,
-                                decoration:
-                                    const InputDecoration(
-                                  border:
-                                      OutlineInputBorder(),
-                                  labelText:
-                                      'AIサービス',
-                                ),
-                                items: _aiProviders
-                                    .map(
-                                      (provider) =>
-                                          DropdownMenuItem<
-                                              String>(
-                                        value: provider,
-                                        child: Text(
-                                          provider,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedAiProvider =
-                                        value;
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return '利用したAIを'
-                                        '選択してください。';
-                                  }
 
-                                  return null;
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 24),
-                     
-                      OutlinedButton.icon(
-                        onPressed:
+
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton.icon(
+                          onPressed:
+                              _isSaving
+                                  ? null
+                                  : _saveWaitingConversation,
+                          icon: _isSaving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons
+                                      .hourglass_empty_outlined,
+                                ),
+                        
+                          label: Text(
                             _isSaving
-                                ? null
-                                : _saveWaitingConversation,
-                        icon: const Icon(
-                          Icons.hourglass_empty_outlined,
-                        ),
-                        label: const Text(
-                          '回答待ちとして保存',
+                                ? '保存しています...'
+                                : '質問を保存する',
+                            style: const TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),                        
                         ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      FilledButton.icon(
-                        onPressed:
-                            _isSaving
-                                ? null
-                                : _saveConversation,
-                        icon: _isSaving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.save_outlined,
-                              ),
-                        label: Text(
-                          _isSaving
-                              ? '保存しています...'
-                              : 'AI相談を保存する',
-                        ),
+                      const Text(
+                        '質問をAIへ送ったあと、'
+                        '回答を受け取ったら'
+                        '「これまでの対話」から'
+                        '回答を取り込めます。',
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ],
@@ -950,4 +674,5 @@ class _AiChatScreenState
       ),
     );
   }
-}
+}                             
+                             

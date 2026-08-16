@@ -653,65 +653,72 @@ class _AiConversationDetailScreenState
             const SizedBox(height: 16),
 
             Card(
-              child: Padding(
-                padding:
-                    const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .stretch,
-                  children: [
-                    const Text(
-                      'AIへ渡した文章',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SelectableText(
+              child: ExpansionTile(
+                title: const Text(
+                  'AIへ渡した文章',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: const Text(
+                  'タップすると全文を表示します。',
+                ),
+                childrenPadding:
+                    const EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  16,
+                ),
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
                       _conversation.aiPrompt.isEmpty
                           ? 'この対話では保存されていません。'
                           : _conversation.aiPrompt,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-
+            ),           
+           
             const SizedBox(height: 16),           
            
-            const SizedBox(height: 16),
-
             Card(
-              child: Padding(
-                padding:
-                    const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .stretch,
-                  children: [
-                    const Text(
-                      'AIからの回答',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
+              child: ExpansionTile(
+                title: const Text(
+                  'AIからの回答',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  _conversation.aiResponse.isEmpty
+                      ? 'まだAIからの回答を受け取っていません。'
+                      : 'タップすると全文を表示します。',
+                ),
+                childrenPadding:
+                    const EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  16,
+                ),
+                children: [
+                  if (_conversation.aiResponse.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: SelectableText(
+                        _conversation.aiResponse,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    SelectableText(
-                      _conversation.aiResponse.isEmpty
-                          ? 'まだAIからの回答を受け取っていません。'
-                          : _conversation.aiResponse,
-                    ),
-                  ],
-                ),
+                ],
               ),
-            ),
-
+            ),           
+           
             if (_conversation.summary
                 .isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -765,30 +772,49 @@ class _AiConversationDetailScreenState
             ],
 
             if (canDefer)
-              FilledButton.tonalIcon(
+              Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton.icon(
+                    onPressed:
+                        _openReflectionScreen,
+                    icon: const Icon(
+                      Icons.psychology_outlined,
+                    ),
+                    label: const Text(
+                      'AI回答を整理する',
+                    ),
+                  ),
 
-                onPressed:
-                    _isUpdatingStatus
-                        ? null
-                        : _deferConversation,
-                icon: _isUpdatingStatus
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child:
-                            CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.schedule_outlined,
-                      ),
-                label: Text(
-                  _isUpdatingStatus
-                      ? '変更しています...'
-                      : 'あとで整理する',
-                ),
-              )
+                  const SizedBox(height: 12),
+
+                  FilledButton.tonalIcon(
+                    onPressed:
+                        _isUpdatingStatus
+                            ? null
+                            : _deferConversation,
+                    icon: _isUpdatingStatus
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.schedule_outlined,
+                          ),
+                    label: Text(
+                      _isUpdatingStatus
+                          ? '変更しています...'
+                          : 'あとで整理する',
+                    ),
+                  ),
+                ],
+              )           
+           
             else if (isDeferred)
               Column(
                 crossAxisAlignment:

@@ -91,23 +91,126 @@ class _AiConversationReflectionScreenState
 
   Set<String> _savedCandidateIds = {};
 
+  String _extractMarkdownSection({
+    required String source,
+    required String startHeading,
+    String? endHeading,
+  }) {
+    String normalizeHeading(String line) {
+      var value = line.trim();
+
+      value = value.replaceFirst(
+        RegExp(r'^#+\s*'),
+        '',
+      );
+
+      if (value.startsWith('**') &&
+          value.endsWith('**') &&
+          value.length >= 4) {
+        value = value.substring(
+          2,
+          value.length - 2,
+        );
+      }
+
+      value = value.trim();
+
+      if (value.endsWith('：') ||
+          value.endsWith(':')) {
+        value = value.substring(
+          0,
+          value.length - 1,
+        );
+      }
+
+      return value.trim();
+    }
+
+    final lines = source.split('\n');
+
+    var startLine = -1;
+    var endLine = lines.length;
+
+    for (var i = 0; i < lines.length; i++) {
+      final normalized =
+          normalizeHeading(lines[i]);
+
+      if (startLine == -1 &&
+          normalized == startHeading) {
+        startLine = i + 1;
+        continue;
+      }
+
+      if (startLine != -1 &&
+          endHeading != null &&
+          normalized == endHeading) {
+        endLine = i;
+        break;
+      }
+    }
+
+    if (startLine == -1) {
+      return '';
+    }
+
+    return lines
+        .sublist(
+          startLine,
+          endLine,
+        )
+        .join('\n')
+        .trim();
+  }
+
   @override
   void initState() {
     super.initState();
 
+    final aiResponse =
+        widget.conversation.aiResponse;
+
+    final savedSummary =
+        widget.conversation.summary.trim();
+
+    final extractedSummary =
+        savedSummary.isNotEmpty
+            ? savedSummary
+            : _extractMarkdownSection(
+                source: aiResponse,
+                startHeading: '要約',
+                endHeading: '知識候補',
+              );
+
+    final extractedCandidate =
+        _extractMarkdownSection(
+      source: aiResponse,
+      startHeading: '知識候補',
+      endHeading: '次に考える問い',
+    );
+
+    final extractedNewQuestion =
+        _extractMarkdownSection(
+      source: aiResponse,
+      startHeading: '次に考える問い',
+    );
+
     _summaryController =
         TextEditingController(
-      text: widget.conversation.summary,
+      text: extractedSummary,
     );
 
     _candidateContentController =
-        TextEditingController();
+        TextEditingController(
+      text: extractedCandidate,
+    );
 
     _candidateReasonController =
         TextEditingController();
 
     _newQuestionContentController =
-        TextEditingController();
+        TextEditingController(
+      text: extractedNewQuestion,
+    );
 
     _newQuestionReasonController =
         TextEditingController();

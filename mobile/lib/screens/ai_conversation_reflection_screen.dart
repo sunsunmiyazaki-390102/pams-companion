@@ -89,6 +89,20 @@ class _AiConversationReflectionScreenState
 
   List<NewQuestion> _newQuestions = [];
 
+  List<_ParsedNewQuestion>
+      _parsedNewQuestions = [];
+
+  int _currentNewQuestionIndex = 0;
+
+  bool _isNewQuestionReviewCompleted = false;
+
+  List<_ParsedKnowledgeCandidate>
+      _parsedKnowledgeCandidates = [];
+
+  int _currentKnowledgeCandidateIndex = 0;
+
+  bool _isKnowledgeCandidateReviewCompleted = false;
+ 
   Set<String> _savedCandidateIds = {};
 
   String _extractMarkdownSection({
@@ -162,6 +176,247 @@ class _AiConversationReflectionScreenState
         .trim();
   }
 
+  List<_ParsedKnowledgeCandidate>
+      _parseKnowledgeCandidates(
+    String source,
+  ) {
+    final section =
+        _extractMarkdownSection(
+      source: source,
+      startHeading: '知識候補',
+      endHeading: '次に考える問い',
+    );
+
+    if (section.isEmpty ||
+        section.trim() == 'なし') {
+      return [];
+    }
+
+    String normalizeLine(String line) {
+      var value = line.trim();
+
+      value = value.replaceFirst(
+        RegExp(r'^#+\s*'),
+        '',
+      );
+
+      if (value.startsWith('**') &&
+          value.endsWith('**') &&
+          value.length >= 4) {
+        value = value.substring(
+          2,
+          value.length - 2,
+        );
+      }
+
+      return value.trim();
+    }
+
+    final lines = section.split('\n');
+
+    final candidates =
+        <_ParsedKnowledgeCandidate>[];
+
+    var candidateStarted = false;
+    var readingContent = false;
+    var readingReason = false;
+
+    final contentBuffer = StringBuffer();
+    final reasonBuffer = StringBuffer();
+
+    void saveCurrentCandidate() {
+      if (!candidateStarted) {
+        return;
+      }
+
+      final content =
+          contentBuffer.toString().trim();
+
+      final reason =
+          reasonBuffer.toString().trim();
+
+      if (content.isNotEmpty) {
+        candidates.add(
+          _ParsedKnowledgeCandidate(
+            content: content,
+            reason: reason,
+          ),
+        );
+      }
+
+      contentBuffer.clear();
+      reasonBuffer.clear();
+
+      readingContent = false;
+      readingReason = false;
+    }
+
+    for (final rawLine in lines) {
+      final line = normalizeLine(rawLine);
+
+      if (RegExp(
+        r'^知識候補\s*\d+$',
+      ).hasMatch(line)) {
+        saveCurrentCandidate();
+
+        candidateStarted = true;
+        readingContent = false;
+        readingReason = false;
+
+        continue;
+      }
+
+      if (!candidateStarted) {
+        continue;
+      }
+
+      if (line == '内容:' ||
+          line == '内容：') {
+        readingContent = true;
+        readingReason = false;
+        continue;
+      }
+
+      if (line == '理由:' ||
+          line == '理由：') {
+        readingContent = false;
+        readingReason = true;
+        continue;
+      }
+
+      if (readingContent) {
+        if (contentBuffer.isNotEmpty) {
+          contentBuffer.writeln();
+        }
+
+        contentBuffer.write(line);
+      } else if (readingReason) {
+        if (reasonBuffer.isNotEmpty) {
+          reasonBuffer.writeln();
+        }
+
+        reasonBuffer.write(line);
+      }
+    }
+
+    saveCurrentCandidate();
+
+    return candidates;
+  }
+
+  List<_ParsedNewQuestion>
+      _parseNewQuestions(
+    String source,
+  ) {
+    final section =
+        _extractMarkdownSection(
+      source: source,
+      startHeading: '次に考える問い',
+    );
+
+    if (section.isEmpty ||
+        section.trim() == 'なし') {
+      return [];
+    }
+
+    String normalizeLine(String line) {
+      var value = line.trim();
+
+      value = value.replaceFirst(
+        RegExp(r'^#+\s*'),
+        '',
+      );
+
+      if (value.startsWith('**') &&
+          value.endsWith('**') &&
+          value.length >= 4) {
+        value = value.substring(
+          2,
+          value.length - 2,
+        );
+      }
+
+      return value.trim();
+    }
+
+    final lines = section.split('\n');
+
+    final questions =
+        <_ParsedNewQuestion>[];
+
+    var readingContent = false;
+    var readingReason = false;
+
+    final contentBuffer = StringBuffer();
+    final reasonBuffer = StringBuffer();
+
+    void saveCurrentQuestion() {
+      final content =
+          contentBuffer.toString().trim();
+
+      final reason =
+          reasonBuffer.toString().trim();
+
+      if (content.isNotEmpty) {
+        questions.add(
+          _ParsedNewQuestion(
+            content: content,
+            reason: reason,
+          ),
+        );
+      }
+
+      contentBuffer.clear();
+      reasonBuffer.clear();
+
+      readingContent = false;
+      readingReason = false;
+    }
+
+    for (final rawLine in lines) {
+      final line = normalizeLine(rawLine);
+
+      if (RegExp(
+        r'^問い\s*\d+$',
+      ).hasMatch(line)) {
+        saveCurrentQuestion();
+        continue;
+      }
+
+      if (line == '内容:' ||
+          line == '内容：') {
+        readingContent = true;
+        readingReason = false;
+        continue;
+      }
+
+      if (line == '理由:' ||
+          line == '理由：') {
+        readingContent = false;
+        readingReason = true;
+        continue;
+      }
+
+      if (readingContent) {
+        if (contentBuffer.isNotEmpty) {
+          contentBuffer.writeln();
+        }
+
+        contentBuffer.write(line);
+      } else if (readingReason) {
+        if (reasonBuffer.isNotEmpty) {
+          reasonBuffer.writeln();
+        }
+
+        reasonBuffer.write(line);
+      }
+    }
+
+    saveCurrentQuestion();
+
+    return questions;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -181,19 +436,34 @@ class _AiConversationReflectionScreenState
                 endHeading: '知識候補',
               );
 
-    final extractedCandidate =
-        _extractMarkdownSection(
-      source: aiResponse,
-      startHeading: '知識候補',
-      endHeading: '次に考える問い',
+    _parsedKnowledgeCandidates =
+        _parseKnowledgeCandidates(
+      aiResponse,
     );
 
-    final extractedNewQuestion =
-        _extractMarkdownSection(
-      source: aiResponse,
-      startHeading: '次に考える問い',
+    _currentKnowledgeCandidateIndex = 0;
+
+    final firstCandidate =
+        _parsedKnowledgeCandidates.isNotEmpty
+            ? _parsedKnowledgeCandidates[
+                _currentKnowledgeCandidateIndex
+              ]
+            : null;   
+
+    _parsedNewQuestions =
+        _parseNewQuestions(
+      aiResponse,
     );
 
+    _currentNewQuestionIndex = 0;
+
+    final firstNewQuestion =
+        _parsedNewQuestions.isNotEmpty
+            ? _parsedNewQuestions[
+                _currentNewQuestionIndex
+              ]
+            : null;   
+   
     _summaryController =
         TextEditingController(
       text: extractedSummary,
@@ -201,19 +471,23 @@ class _AiConversationReflectionScreenState
 
     _candidateContentController =
         TextEditingController(
-      text: extractedCandidate,
+      text: firstCandidate?.content ?? '',
     );
 
     _candidateReasonController =
-        TextEditingController();
+        TextEditingController(
+      text: firstCandidate?.reason ?? '',
+    );
 
     _newQuestionContentController =
         TextEditingController(
-      text: extractedNewQuestion,
+      text: firstNewQuestion?.content ?? '',
     );
 
     _newQuestionReasonController =
-        TextEditingController();
+        TextEditingController(
+      text: firstNewQuestion?.reason ?? '',
+    );
 
     _loadKnowledgeCandidates();
     _loadNewQuestions();
@@ -387,6 +661,45 @@ class _AiConversationReflectionScreenState
     }
   }
 
+  void _moveToNextKnowledgeCandidate() {
+    if (_parsedKnowledgeCandidates.isEmpty) {
+      return;
+    }
+
+    final nextIndex =
+        _currentKnowledgeCandidateIndex + 1;
+
+    if (nextIndex >=
+        _parsedKnowledgeCandidates.length) {
+      setState(() {
+        _isKnowledgeCandidateReviewCompleted =
+            true;
+
+        _candidateContentController.clear();
+        _candidateReasonController.clear();
+      });
+
+      return;
+    }
+
+    final nextCandidate =
+        _parsedKnowledgeCandidates[nextIndex];
+
+    setState(() {
+      _currentKnowledgeCandidateIndex =
+          nextIndex;
+
+      _selectedSuggestedType =
+          KnowledgeType.insight;
+
+      _candidateContentController.text =
+          nextCandidate.content;
+
+      _candidateReasonController.text =
+          nextCandidate.reason;
+    });
+  } 
+ 
   Future<void> _saveKnowledgeCandidate() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -452,9 +765,6 @@ class _AiConversationReflectionScreenState
         );
       }
 
-      _candidateContentController.clear();
-      _candidateReasonController.clear();
-
       await _loadKnowledgeCandidates();
 
       if (!mounted) {
@@ -465,6 +775,8 @@ class _AiConversationReflectionScreenState
         _isSavingCandidate = false;
       });
 
+      _moveToNextKnowledgeCandidate();     
+     
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -490,6 +802,42 @@ class _AiConversationReflectionScreenState
         ),
       );
     }
+  }
+
+  void _moveToNextNewQuestion() {
+    if (_parsedNewQuestions.isEmpty) {
+      return;
+    }
+
+    final nextIndex =
+        _currentNewQuestionIndex + 1;
+
+    if (nextIndex >=
+        _parsedNewQuestions.length) {
+      setState(() {
+        _isNewQuestionReviewCompleted =
+            true;
+
+        _newQuestionContentController.clear();
+        _newQuestionReasonController.clear();
+      });
+
+      return;
+    }
+
+    final nextQuestion =
+        _parsedNewQuestions[nextIndex];
+
+    setState(() {
+      _currentNewQuestionIndex =
+          nextIndex;
+
+      _newQuestionContentController.text =
+          nextQuestion.content;
+
+      _newQuestionReasonController.text =
+          nextQuestion.reason;
+    });
   }
 
   Future<void> _saveNewQuestion() async {
@@ -552,9 +900,6 @@ class _AiConversationReflectionScreenState
         );
       }
 
-      _newQuestionContentController.clear();
-      _newQuestionReasonController.clear();
-
       await _loadNewQuestions();
 
       if (!mounted) {
@@ -564,6 +909,8 @@ class _AiConversationReflectionScreenState
       setState(() {
         _isSavingNewQuestion = false;
       });
+
+      _moveToNextNewQuestion();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1036,6 +1383,7 @@ class _AiConversationReflectionScreenState
                       ),
                     ),
                     const SizedBox(height: 16),
+                  
                     FilledButton.icon(
                       onPressed:
                           _isSavingSummary
@@ -1056,9 +1404,11 @@ class _AiConversationReflectionScreenState
                       label: Text(
                         _isSavingSummary
                             ? '保存しています...'
-                            : '要約を保存する',
+                            : 'この要約を保存する',
                       ),
                     ),
+
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -1074,123 +1424,260 @@ class _AiConversationReflectionScreenState
                   crossAxisAlignment:
                       CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      '知識候補',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
+                  
+                    if (_isKnowledgeCandidateReviewCompleted) ...[
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '知識候補の整理が終わりました',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight:
+                                    FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'この回答から、自分の知識として'
-                      '残したい内容を候補として追加します。',
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller:
-                          _candidateContentController,
-                      minLines: 3,
-                      maxLines: 8,
-                      decoration:
-                          const InputDecoration(
-                        border:
-                            OutlineInputBorder(),
-                        hintText:
-                            '知識候補を'
-                            '入力してください。',
-                        alignLabelWithHint:
-                            true,
+
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'AIが提案した知識候補について、'
+                        '残すか残さないかの判断が'
+                        '終わりました。',
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      '提案Type',
-                      style: TextStyle(
-                        fontWeight:
-                            FontWeight.bold,
+
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'あなたが「残す」と判断した'
+                        '知識は保存されています。',
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue:
-                          _selectedSuggestedType,
-                      decoration:
-                          const InputDecoration(
-                        border:
-                            OutlineInputBorder(),
+
+                      const SizedBox(height: 20),
+
+                      const Divider(),
+
+                      const SizedBox(height: 20),
+
+                      const Text(
+                        '次は、この対話から生まれた'
+                        '「次に考える問い」を'
+                        '整理します。',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
                       ),
-                      items: KnowledgeType.values
-                          .cast<String>()
-                          .map(
-                            (type) =>
-                                DropdownMenuItem<String>(
-                              value: type,
-                              child: Text(
-                                KnowledgeType
-                                    .displayName(
-                                  type,
+
+                      const SizedBox(height: 20),
+                    ] else ...[
+                      const Text(
+                        '知識候補',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        _parsedKnowledgeCandidates.isEmpty
+                            ? '知識候補はありません。'
+                            : '知識候補 '
+                                '${_currentKnowledgeCandidateIndex + 1}'
+                                ' / '
+                                '${_parsedKnowledgeCandidates.length}',
+                        style: const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        'AIが回答から見つけた候補です。'
+                        '内容と理由を確認してください。',
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        '内容',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller:
+                            _candidateContentController,
+                        minLines: 3,
+                        maxLines: 8,
+                        decoration:
+                            const InputDecoration(
+                          border:
+                              OutlineInputBorder(),
+                          hintText:
+                              '知識候補の内容',
+                          alignLabelWithHint:
+                              true,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        '残す理由',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller:
+                            _candidateReasonController,
+                        minLines: 2,
+                        maxLines: 5,
+                        decoration:
+                            const InputDecoration(
+                          border:
+                              OutlineInputBorder(),
+                          hintText:
+                              'この候補を残す理由',
+                          alignLabelWithHint:
+                              true,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        '種類',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      DropdownButtonFormField<String>(
+                        initialValue:
+                            _selectedSuggestedType,
+                        decoration:
+                            const InputDecoration(
+                          border:
+                              OutlineInputBorder(),
+                        ),
+                        items: KnowledgeType.values
+                            .cast<String>()
+                            .map(
+                              (type) =>
+                                  DropdownMenuItem<String>(
+                                value: type,
+                                child: Text(
+                                  KnowledgeType
+                                      .displayName(
+                                    type,
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value == null) {
-                          return;
-                        }
-
-                        setState(() {
-                          _selectedSuggestedType =
-                              value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller:
-                          _candidateReasonController,
-                      minLines: 2,
-                      maxLines: 5,
-                      decoration:
-                          const InputDecoration(
-                        border:
-                            OutlineInputBorder(),
-                        labelText:
-                            '候補にした理由',
-                        hintText:
-                            'なぜ残す価値があるか'
-                            '入力してください。',
-                        alignLabelWithHint:
-                            true,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed:
-                          _isSavingCandidate
-                              ? null
-                              : _saveKnowledgeCandidate,
-                      icon: _isSavingCandidate
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child:
-                                  CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
                             )
-                          : const Icon(
-                              Icons.add_outlined,
-                            ),
-                      label: Text(
-                        _isSavingCandidate
-                            ? '保存しています...'
-                            : '知識候補を追加する',
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) {
+                            return;
+                          }
+
+                          setState(() {
+                            _selectedSuggestedType =
+                                value;
+                          });
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 20),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        'この知識を残しますか？',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child:
+                                FilledButton.icon(
+                              onPressed:
+                                  _isSavingCandidate
+                                      ? null
+                                      : _saveKnowledgeCandidate,
+                              icon: _isSavingCandidate
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child:
+                                          CircularProgressIndicator(
+                                        strokeWidth:
+                                            2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons
+                                          .check_outlined,
+                                    ),
+                              label: Text(
+                                _isSavingCandidate
+                                    ? '保存しています...'
+                                    : '残す',
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child:
+                                OutlinedButton.icon(
+                              onPressed:
+                                  _isSavingCandidate
+                                      ? null
+                                      : _moveToNextKnowledgeCandidate,
+                              icon: const Icon(
+                                Icons.close_outlined,
+                              ),
+                              label: const Text(
+                                '残さない',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+                    ],                  
+
                     if (_isLoadingCandidates)
                       const Center(
                         child:
@@ -1405,83 +1892,197 @@ class _AiConversationReflectionScreenState
                   crossAxisAlignment:
                       CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      '次に考える問い',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'この回答から生まれた'
-                      '「次に考える問い」を'
-                      '候補として残します。',
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller:
-                          _newQuestionContentController,
-                      minLines: 3,
-                      maxLines: 8,
-                      decoration:
-                          const InputDecoration(
-                        border:
-                            OutlineInputBorder(),
-                        labelText:
-                            '問いの内容',
-                        hintText:
-                            '次に考える問いを'
-                            '入力してください。',
-                        alignLabelWithHint:
-                            true,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller:
-                          _newQuestionReasonController,
-                      minLines: 2,
-                      maxLines: 5,
-                      decoration:
-                          const InputDecoration(
-                        border:
-                            OutlineInputBorder(),
-                        labelText:
-                            'なぜこの問いが生まれたか',
-                        hintText:
-                            'この問いを次に考える'
-                            '理由を入力してください。',
-                        alignLabelWithHint:
-                            true,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed:
-                          _isSavingNewQuestion
-                              ? null
-                              : _saveNewQuestion,
-                      icon: _isSavingNewQuestion
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child:
-                                  CircularProgressIndicator(
-                                strokeWidth: 2,
+                  
+                    if (_isNewQuestionReviewCompleted) ...[
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '次に考える問いの整理が終わりました',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight:
+                                    FontWeight.bold,
                               ),
-                            )
-                          : const Icon(
-                              Icons.add_outlined,
                             ),
-                      label: Text(
-                        _isSavingNewQuestion
-                            ? '保存しています...'
-                            : '次に考える問いを追加する',
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
+
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'AIが提案した問いについて、'
+                        '残すか残さないかの判断が'
+                        '終わりました。',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'あなたが「残す」と判断した'
+                        '問いは保存されています。',
+                      ),
+
+                      const SizedBox(height: 20),
+                    ] else ...[
+                      const Text(
+                        '次に考える問い',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        _parsedNewQuestions.isEmpty
+                            ? '次に考える問いはありません。'
+                            : '次に考える問い '
+                                '${_currentNewQuestionIndex + 1}'
+                                ' / '
+                                '${_parsedNewQuestions.length}',
+                        style: const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        'AIがこの対話から見つけた問いです。'
+                        '内容と理由を確認してください。',
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        '内容',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller:
+                            _newQuestionContentController,
+                        minLines: 3,
+                        maxLines: 8,
+                        decoration:
+                            const InputDecoration(
+                          border:
+                              OutlineInputBorder(),
+                          hintText:
+                              '次に考える問いの内容',
+                          alignLabelWithHint:
+                              true,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        '残す理由',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      TextFormField(
+                        controller:
+                            _newQuestionReasonController,
+                        minLines: 2,
+                        maxLines: 5,
+                        decoration:
+                            const InputDecoration(
+                          border:
+                              OutlineInputBorder(),
+                          hintText:
+                              'この問いを次に考える理由',
+                          alignLabelWithHint:
+                              true,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      const Text(
+                        'この問いを残しますか？',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child:
+                                FilledButton.icon(
+                              onPressed:
+                                  _isSavingNewQuestion
+                                      ? null
+                                      : _saveNewQuestion,
+                              icon: _isSavingNewQuestion
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child:
+                                          CircularProgressIndicator(
+                                        strokeWidth:
+                                            2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons
+                                          .check_outlined,
+                                    ),
+                              label: Text(
+                                _isSavingNewQuestion
+                                    ? '保存しています...'
+                                    : '残す',
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child:
+                                OutlinedButton.icon(
+                              onPressed:
+                                  _isSavingNewQuestion
+                                      ? null
+                                      : _moveToNextNewQuestion,
+                              icon: const Icon(
+                                Icons.close_outlined,
+                              ),
+                              label: const Text(
+                                '残さない',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+                    ],                 
+                   
                     if (_isLoadingNewQuestions)
                       const Center(
                         child:
@@ -1654,3 +2255,23 @@ class _AiConversationReflectionScreenState
     );
   }
 }
+class _ParsedKnowledgeCandidate {
+  const _ParsedKnowledgeCandidate({
+    required this.content,
+    required this.reason,
+  });
+
+  final String content;
+  final String reason;
+}
+
+class _ParsedNewQuestion {
+  const _ParsedNewQuestion({
+    required this.content,
+    required this.reason,
+  });
+
+  final String content;
+  final String reason;
+}
+

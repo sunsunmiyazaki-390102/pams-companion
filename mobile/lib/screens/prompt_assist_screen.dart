@@ -179,6 +179,7 @@ class _PromptAssistScreenState
     buffer.writeln(
       '質問に対する回答を記載してください。',
     );
+
     buffer.writeln();
     buffer.writeln('## 要約');
     buffer.writeln();
@@ -186,28 +187,91 @@ class _PromptAssistScreenState
       '回答全体の重要な内容を'
       '簡潔にまとめてください。',
     );
+
     buffer.writeln();
     buffer.writeln('## 知識候補');
     buffer.writeln();
     buffer.writeln(
       'この対話から、今後の判断、行動、'
-      '学習又は新しい思考に役立つ知識を'
-      '複数提案してください。',
+      '学習又は新しい思考に役立つ知識を、'
+      '1件から3件提案してください。',
     );
     buffer.writeln();
     buffer.writeln(
-      '各知識候補について、内容と、'
-      'その候補を残す理由を示してください。',
+      '各知識候補は、'
+      '次の形式で記載してください。',
     );
+    buffer.writeln();
+    buffer.writeln('### 知識候補 1');
+    buffer.writeln('内容:');
+    buffer.writeln(
+      'ここに知識候補の内容を'
+      '記載してください。',
+    );
+    buffer.writeln();
+    buffer.writeln('理由:');
+    buffer.writeln(
+      'この知識候補を残す理由を'
+      '記載してください。',
+    );
+    buffer.writeln();
+    buffer.writeln(
+      '必要な件数だけ、'
+      '「### 知識候補 2」'
+      '「### 知識候補 3」'
+      'として続けてください。',
+    );
+    buffer.writeln();
+    buffer.writeln(
+      '該当する知識候補がない場合は、'
+      '「なし」と記載してください。',
+    );
+
     buffer.writeln();
     buffer.writeln('## 次に考える問い');
     buffer.writeln();
     buffer.writeln(
       'このテーマをさらに深めたり、'
-      '次の行動につなげたりするための問いを'
-      '提案してください。',
+      '次の行動につなげたりするための問いを、'
+      '1件から3件提案してください。',
+    );
+    buffer.writeln();
+    buffer.writeln(
+      '各問いは、'
+      '次の形式で記載してください。',
+    );
+    buffer.writeln();
+    buffer.writeln('### 問い 1');
+    buffer.writeln('内容:');
+    buffer.writeln(
+      'ここに次に考える問いを'
+      '記載してください。',
+    );
+    buffer.writeln();
+    buffer.writeln('理由:');
+    buffer.writeln(
+      'この問いを次に考える理由を'
+      '記載してください。',
+    );
+    buffer.writeln();
+    buffer.writeln(
+      '必要な件数だけ、'
+      '「### 問い 2」'
+      '「### 問い 3」'
+      'として続けてください。',
+    );
+    buffer.writeln();
+    buffer.writeln(
+      '該当する問いがない場合は、'
+      '「なし」と記載してください。',
     );
 
+    buffer.writeln();
+    buffer.writeln(
+      '見出し名と「内容:」「理由:」の'
+      'ラベルは変更しないでください。',
+    );  
+  
     setState(() {
       _generatedPromptController.text =
           buffer.toString().trim();

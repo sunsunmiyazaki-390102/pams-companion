@@ -33,7 +33,9 @@ class AiChatScreen extends StatefulWidget {
 }
 
 class _AiChatScreenState
-    extends State<AiChatScreen> {
+    extends State<AiChatScreen>
+    with WidgetsBindingObserver {
+
   final ProjectRepository _projectRepository =
       ProjectRepository();
 
@@ -133,6 +135,8 @@ class _AiChatScreenState
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addObserver(this);
+
     _currentConversation =
         widget.initialConversation;
 
@@ -164,7 +168,29 @@ class _AiChatScreenState
   }
 
   @override
+  void didChangeAppLifecycleState(
+    AppLifecycleState state,
+  ) {
+    if (state != AppLifecycleState.paused) {
+      return;
+    }
+
+    _saveDraftOnBackground();
+  }
+
+  Future<void> _saveDraftOnBackground() async {
+    try {
+      await _saveDraftConversation();
+    } catch (_) {
+      // バックグラウンド移行時なので、
+      // ここでは画面通知を行わない。
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+   
     _questionController.dispose();
     _aiResponseController.dispose();
 
@@ -181,12 +207,39 @@ class _AiChatScreenState
   }
 
   Future<void> _openConversationHistory() async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (context) =>
-            const AiConversationListScreen(),
-      ),
-    );
+    final navigator =
+        Navigator.of(context);
+
+    final messenger =
+        ScaffoldMessenger.of(context);
+
+    try {
+      await _saveDraftConversation();
+
+      if (!mounted) {
+        return;
+      }
+
+      await navigator.push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              const AiConversationListScreen(),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '質問を仮保存できませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _openReflectionScreen() async {

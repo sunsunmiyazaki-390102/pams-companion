@@ -49,9 +49,11 @@ class _AiConversationListScreenState
   ) async {
     final shouldOpenAiChat =
         conversation.responseStatus ==
+                AiResponseStatus.draft ||
+            conversation.responseStatus ==
                 AiResponseStatus.waiting ||
             conversation.responseStatus ==
-                AiResponseStatus.received;
+                AiResponseStatus.received;   
 
     if (shouldOpenAiChat) {
       await Navigator.of(context).push<void>(

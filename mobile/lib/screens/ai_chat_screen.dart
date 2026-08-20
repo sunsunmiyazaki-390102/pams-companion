@@ -63,7 +63,8 @@ class _AiChatScreenState
   AiConversation? _currentConversation;
 
   bool _isSaving = false;  
-  
+  bool _allowPop = false;
+
   Future<List<Project>>
       _loadProjectsWithDefault() async {
    
@@ -224,6 +225,142 @@ class _AiChatScreenState
     });
   }
 
+  Future<void> _saveDraftConversation() async {
+    final projectId =
+        _selectedProjectId;
+
+    final aiPrompt =
+        _questionController.text.trim();
+
+    final originalQuestion =
+        _originalQuestion?.trim();
+
+    final userMessage =
+        originalQuestion != null &&
+                originalQuestion.isNotEmpty
+            ? originalQuestion
+            : aiPrompt;
+
+    if (projectId == null ||
+        aiPrompt.isEmpty) {
+      return;
+    }
+
+    final currentConversation =
+        _currentConversation;
+
+    final now = DateTime.now();
+
+    if (currentConversation == null) {
+      final sessionId = _uuid.v4();
+      final conversationId = _uuid.v4();
+
+      final session = AiSession(
+        sessionId: sessionId,
+        projectId: projectId,
+        title: _buildSessionTitle(
+          userMessage,
+        ),
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final conversation = AiConversation(
+        conversationId: conversationId,
+        sessionId: sessionId,
+        userMessage: userMessage,
+        aiPrompt: aiPrompt,
+        aiResponse: '',
+        summary: '',
+        aiProvider: '',
+        responseStatus:
+            AiResponseStatus.draft,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await _sessionRepository.insert(
+        session,
+      );
+
+      await _conversationRepository.insert(
+        conversation,
+      );
+
+      final savedConversation =
+          await _conversationRepository.findById(
+        conversationId,
+      );
+
+      if (savedConversation == null) {
+        throw StateError(
+          '仮保存した質問を確認できませんでした。',
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _currentConversation =
+            savedConversation;
+      });
+
+      return;
+    }
+
+    if (currentConversation.responseStatus !=
+        AiResponseStatus.draft) {
+      return;
+    }
+
+    final updatedConversation =
+        currentConversation.copyWith(
+      userMessage: userMessage,
+      aiPrompt: aiPrompt,
+      updatedAt: now,
+    );
+
+    await _conversationRepository.update(
+      updatedConversation,
+    );
+
+    final session =
+        await _sessionRepository.findById(
+      currentConversation.sessionId,
+    );
+
+    if (session != null) {
+      await _sessionRepository.update(
+        AiSession(
+          sessionId: session.sessionId,
+          projectId: session.projectId,
+          title: _buildSessionTitle(
+            userMessage,
+          ),
+          createdAt: session.createdAt,
+          updatedAt: now,
+        ),
+      );
+    }
+
+    final savedConversation =
+        await _conversationRepository.findById(
+      currentConversation.conversationId,
+    );
+
+    if (savedConversation == null ||
+        !mounted) {
+      return;
+    }
+
+    setState(() {
+      _currentConversation =
+          savedConversation;
+    });
+  }
+
   Future<void> _openPromptAssist() async {
     final result =
         await Navigator.of(context)
@@ -245,6 +382,23 @@ class _AiChatScreenState
       _questionController.text =
           result.aiPrompt.trim();
     });
+ 
+    try {
+      await _saveDraftConversation();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '質問を仮保存できませんでした。\n'
+            '$error',
+          ),
+        ),
+      );
+    } 
   } 
 
   Future<void> _copyQuestionToClipboard() async {
@@ -343,6 +497,105 @@ class _AiChatScreenState
     });
 
     final now = DateTime.now();
+
+    final currentConversation =
+        _currentConversation;
+
+    if (currentConversation != null &&
+        currentConversation.responseStatus ==
+            AiResponseStatus.draft) {
+      final updatedConversation =
+          currentConversation.copyWith(
+        userMessage: userMessage,
+        aiPrompt: aiPrompt,
+        responseStatus:
+            AiResponseStatus.waiting,
+        updatedAt: now,
+      );
+
+      try {
+        await _conversationRepository.update(
+          updatedConversation,
+        );
+
+        final session =
+            await _sessionRepository.findById(
+          currentConversation.sessionId,
+        );
+
+        if (session != null) {
+          if (session.projectId != projectId) {
+            await _sessionRepository.updateProjectId(
+              sessionId: session.sessionId,
+              projectId: projectId,
+            );
+          }
+
+          await _sessionRepository.update(
+            AiSession(
+              sessionId: session.sessionId,
+              projectId: projectId,
+              title: _buildSessionTitle(
+                userMessage,
+              ),
+              createdAt: session.createdAt,
+              updatedAt: now,
+            ),
+          );
+        }
+
+        final savedConversation =
+            await _conversationRepository.findById(
+          currentConversation.conversationId,
+        );
+
+        if (savedConversation == null) {
+          throw StateError(
+            '保存したAI相談を確認できませんでした。',
+          );
+        }
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _currentConversation =
+              savedConversation;
+          _isSaving = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '質問を保存しました。',
+            ),
+          ),
+        );
+
+        return;
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isSaving = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'AI相談を保存できませんでした。\n'
+              '$error',
+            ),
+          ),
+        );
+
+        return;
+      }
+    }
+
     final sessionId = _uuid.v4();
     final conversationId = _uuid.v4();
 
@@ -526,8 +779,49 @@ class _AiChatScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return PopScope(
+      canPop: _allowPop,
+      onPopInvokedWithResult:
+          (didPop, result) async {
+        if (didPop) {
+          return;
+        }
+
+        final navigator =
+            Navigator.of(context);
+
+        final messenger =
+            ScaffoldMessenger.of(context);
+
+        try {
+          await _saveDraftConversation();
+
+          if (!mounted) {
+            return;
+          }
+
+          setState(() {
+            _allowPop = true;
+          });
+
+          navigator.pop();
+        } catch (error) {
+          if (!mounted) {
+            return;
+          }
+
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                '質問を仮保存できませんでした。\n'
+                '$error',
+              ),
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar( 
         title: const Text(
           'AIに相談する',
         ),
@@ -836,7 +1130,9 @@ class _AiChatScreenState
                                   ),
                                 ),
 
-                                if (_currentConversation == null) ...[
+                                if (_currentConversation == null ||
+                                    _currentConversation?.responseStatus ==
+                                        AiResponseStatus.draft) ...[                              
                                   const SizedBox(height: 16),
 
                                   SizedBox(
@@ -1020,7 +1316,7 @@ class _AiChatScreenState
           },
         ),
       ),
-    );
-  }
-}                             
-                             
+    ),
+  );
+}
+}

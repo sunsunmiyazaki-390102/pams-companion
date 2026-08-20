@@ -57,10 +57,18 @@ class _AiChatScreenState
   final TextEditingController _aiResponseController =
       TextEditingController();
 
+  static const List<String> _aiProviders = [
+    'ChatGPT',
+    'Gemini',
+    'Claude',
+    'その他',
+  ];
+
   late Future<List<Project>> _projectsFuture;
 
   String? _selectedProjectId;
   String? _originalQuestion;
+  String? _selectedAiProvider;
 
   AiConversation? _currentConversation;
 
@@ -751,9 +759,23 @@ class _AiChatScreenState
       return;
     }
 
+    final aiProvider =
+        _selectedAiProvider;   
+   
     final aiResponse =
         _aiResponseController.text.trim();
 
+    if (aiProvider == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '利用したAIを選択してください。',
+          ),
+        ),
+      );
+      return;
+    }   
+   
     if (aiResponse.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -772,11 +794,12 @@ class _AiChatScreenState
     final updatedConversation =
         currentConversation.copyWith(
       aiResponse: aiResponse,
+      aiProvider: aiProvider,
       responseStatus:
           AiResponseStatus.received,
       updatedAt: DateTime.now(),
-    );
-
+    );   
+   
     try {
       await _conversationRepository.update(
         updatedConversation,
@@ -1264,6 +1287,32 @@ class _AiChatScreenState
 
                               const SizedBox(height: 12),
 
+                              DropdownButtonFormField<String>(
+                                initialValue:
+                                    _selectedAiProvider,
+                                decoration:
+                                    const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: '利用したAI',
+                                ),
+                                items: _aiProviders
+                                    .map(
+                                      (provider) =>
+                                          DropdownMenuItem<String>(
+                                        value: provider,
+                                        child: Text(provider),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedAiProvider = value;
+                                  });
+                                },
+                              ),
+
+                              const SizedBox(height: 16),                             
+                             
                               TextFormField(
                                 controller:
                                     _aiResponseController,
@@ -1318,6 +1367,19 @@ class _AiChatScreenState
                                 child: Text(
                                   'AIからの回答を'
                                   '保存しました。',
+                                ),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '利用したAI：'
+                                  '${_currentConversation!.aiProvider}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
 

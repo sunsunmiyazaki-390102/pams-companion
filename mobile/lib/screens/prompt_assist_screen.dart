@@ -39,26 +39,108 @@ class _PromptAssistScreenState
       _generatedPromptController =
       TextEditingController();
 
+  String? _selectedTopicCategory;
+
+  String? _selectedTopicExample;
+
+  bool _isSelectingTopicCategory = true;
+
+  static const Map<String, List<String>>
+      _topicExamples = {
+    '仕事・働き方': [
+      '［自分の経験や得意なこと］を活かせる新しい仕事を考えたい',
+      '［自分が関心のある分野］で、AIを活用した仕事や副業を考えたい',
+      '［現在の仕事や働き方］についての悩みを整理したい',
+      '［これから大切にしたいこと］を踏まえて、今後の働き方を考えたい',
+    ],
+    '暮らし・将来': [
+      '［今の生活で気になっていること］を改善して、これからの生活をより良くしたい',
+      '［これから大切にしたいこと］を整理して、今後の生活について考えたい',
+      '［将来心配していること］に備えて、今から準備できることを考えたい',
+      '［これからやってみたいこと］を実現する方法を考えたい',
+    ],
+    '困りごと・問題解決': [
+      '［今困っていること］を解決する方法を考えたい',
+      '［起きている問題］の原因を整理したい',
+      '［解決したい問題］について、いくつかの解決方法を考えたい',
+      '［取り組みたい問題］について、まず何から始めればよいか考えたい',
+    ],
+    '選択・判断': [
+      '［迷っている選択肢］を比較して、自分に合うものを考えたい',
+      '［検討していること］について、それぞれのメリットとデメリットを知りたい',
+      '［決めようとしていること］について、自分に合った選択肢を考えたい',
+      '［判断したいこと］について、決める前に確認すべきことを整理したい',
+    ],
+    '学び・調べもの': [
+      '［知りたいテーマ］について、基礎から学びたい',
+      '［理解したい内容］について、初心者にも分かるように教えてほしい',
+      '［学びたいテーマ］について、何から学べばよいか順番を知りたい',
+      '［調べたいテーマ］について、もっと詳しく調べるためのポイントを知りたい',
+    ],
+    '健康・生活習慣': [
+      '［見直したい生活習慣］について、改善できることを考えたい',
+      '［健康について気になっていること］について、日常生活でできることを知りたい',
+      '［改善したい生活習慣］について、無理なく続けられる方法を考えたい',
+      '［医療機関などに相談したいこと］について、相談するときに確認することを整理したい',
+    ],
+    '人間関係・コミュニケーション': [
+      '［伝えたい相手と内容］について、うまく伝える方法を考えたい',
+      '［人間関係で困っていること］について、状況を整理したい',
+      '［話し合いたい相手やテーマ］について、何を伝えればよいか考えたい',
+      '［相手との間で解決したいこと］について、相手の立場も考えながら解決方法を探したい',
+    ],
+    'アイデア・創作': [
+      '［取り組みたいテーマ］について、新しいアイデアを一緒に考えたい',
+      '［思いついているアイデア］を、実現できる形に具体化したい',
+      '［企画したいこと］について、いくつかの案を考えたい',
+      '［趣味や活動の内容］を、もっと楽しむ方法を考えたい',
+    ],
+  }; 
+ 
   String _selectedPurpose =
-      '説明してほしい';
+      '分かりやすく教えてほしい';
 
   String _selectedDetail =
-      '普通';
-
+      '標準';  
+ 
   static const List<String> _purposes = [
-    '説明してほしい',
-    '手順を教えてほしい',
+    '分かりやすく教えてほしい',
+    'アイデアを提案してほしい',
+    '整理してほしい',
     '比較してほしい',
-    'アイデアがほしい',
-    '問題点を見つけてほしい',
     '一緒に考えてほしい',
-  ];
-
+    '手順を教えてほしい',
+    '改善案を出してほしい',
+    '判断材料を整理してほしい',
+  ]; 
+ 
   static const List<String> _details = [
-    '簡潔に',
-    '普通',
+    '短く',
+    '標準',
     '詳しく',
   ];
+
+  final Set<String>
+      _selectedConditionOptions = {};
+
+  static const Map<String, String>
+      _conditionOptionInstructions = {
+    '分かりやすい言葉で':
+        '専門用語をできるだけ避け、'
+        '分かりやすい言葉で説明してください。',
+
+    '具体例を入れて':
+        '内容を理解しやすくするため、'
+        '具体例があれば示してください。',
+
+    '箇条書きで':
+        '要点は、必要に応じて'
+        '箇条書きも使って整理してください。',
+
+    '注意点も含めて':
+        '注意点や考えられるリスクがあれば、'
+        'あわせて示してください。',
+  };
 
   @override
   void dispose() {
@@ -89,51 +171,65 @@ class _PromptAssistScreenState
     String purposeText;
 
     switch (_selectedPurpose) {
-      case '手順を教えてほしい':
+      case 'アイデアを提案してほしい':
         purposeText =
-            '具体的な手順を順番に'
-            '教えてください。';
+            '考えられるアイデアを'
+            'いくつか提案してください。';
+        break;
+
+      case '整理してほしい':
+        purposeText =
+            '重要なポイントを'
+            '整理してください。';
         break;
 
       case '比較してほしい':
         purposeText =
             '主な選択肢を比較し、'
-            'それぞれの長所と短所を'
-            '示してください。';
-        break;
-
-      case 'アイデアがほしい':
-        purposeText =
-            '実行可能なアイデアを'
-            '複数提案してください。';
-        break;
-
-      case '問題点を見つけてほしい':
-        purposeText =
-            '考えられる問題点や'
-            '注意点を整理してください。';
+            'それぞれの違いを'
+            '分かりやすく示してください。';
         break;
 
       case '一緒に考えてほしい':
         purposeText =
             '一つの結論を急がず、'
-            '考えるべき視点や問いを'
+            '考えられる選択肢や視点を'
             '示しながら一緒に'
-            '検討してください。';
+            '考えてください。';
         break;
 
-      case '説明してほしい':
+      case '手順を教えてほしい':
+        purposeText =
+            '何から始めればよいか、'
+            '順番に説明してください。';
+        break;
+
+      case '改善案を出してほしい':
+        purposeText =
+            '改善できる点と'
+            '具体的な方法を'
+            '提案してください。';
+        break;
+
+      case '判断材料を整理してほしい':
+        purposeText =
+            '自分で判断するために'
+            '必要なポイントを'
+            '整理してください。';
+        break;
+
+      case '分かりやすく教えてほしい':
       default:
         purposeText =
             '分かりやすく'
             '説明してください。';
         break;
-    }
-
+    }   
+   
     String detailText;
 
     switch (_selectedDetail) {
-      case '簡潔に':
+      case '短く':
         detailText =
             '要点を絞って簡潔に'
             '回答してください。';
@@ -145,32 +241,71 @@ class _PromptAssistScreenState
             '詳しく回答してください。';
         break;
 
-      case '普通':
+      case '標準':
       default:
         detailText =
             '必要なポイントを整理して'
-            '回答してください。';
-        break;
+            '分かりやすく回答してください。';
+        break;   
     }
 
     final buffer = StringBuffer();
 
-    buffer.writeln(
-      '$topicについて相談します。',
-    );
+    buffer.writeln('## 質問');
+    buffer.writeln();
+    buffer.writeln(topic);
 
     buffer.writeln();
     buffer.writeln(purposeText);
-    buffer.writeln(detailText);
+    buffer.writeln(detailText);   
+   
+    final selectedConditionInstructions =
+        _selectedConditionOptions
+            .map(
+              (option) =>
+                  _conditionOptionInstructions[
+                    option
+                  ],
+            )
+            .whereType<String>()
+            .toList();
 
-    if (conditions.isNotEmpty) {
+    final hasConditionOptions =
+        selectedConditionInstructions.isNotEmpty;
+
+    final hasCustomConditions =
+        conditions.isNotEmpty;
+
+    if (hasConditionOptions ||
+        hasCustomConditions) {
       buffer.writeln();
       buffer.writeln(
         '次の条件や希望も考慮してください。',
       );
-      buffer.writeln(conditions);
-    }
 
+      if (hasConditionOptions) {
+        buffer.writeln();
+
+        for (final instruction
+            in selectedConditionInstructions) {
+          buffer.writeln(
+            '・$instruction',
+          );
+        }
+      }
+
+      if (hasCustomConditions) {
+        buffer.writeln();
+
+        buffer.writeln(
+          'また、次の事情や希望も'
+          '考慮してください。',
+        );
+
+        buffer.writeln(conditions);
+      }
+    }   
+   
     buffer.writeln();
     buffer.writeln('次のMarkdown形式で回答してください。');
     buffer.writeln();
@@ -389,11 +524,185 @@ class _PromptAssistScreenState
                         ),
                       ),
                       const SizedBox(height: 8),
+                    
                       const Text(
-                        '相談したいテーマや'
-                        '知りたいことを入力してください。',
-                      ),
+                        '相談したい内容に近いものを'
+                        '選んでください。'
+                        '例文を選んだあと、'
+                        '［　］の部分をあなたの内容に'
+                        '書き換えられます。',
+                      ),                    
+                    
                       const SizedBox(height: 12),
+
+                      if (_isSelectingTopicCategory) ...[
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children:
+                              _topicExamples.keys
+                                  .map(
+                            (category) {
+                              return ChoiceChip(
+                                label: Text(
+                                  category,
+                                ),
+                                selected:
+                                    _selectedTopicCategory ==
+                                        category,
+                                onSelected: (_) {
+                                  setState(() {
+                                    _selectedTopicCategory =
+                                        category;
+
+                                    _selectedTopicExample =
+                                        null;
+
+                                    _isSelectingTopicCategory =
+                                        false;
+                                  });
+                                },
+                              );
+                            },
+                          ).toList(),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _selectedTopicCategory =
+                                  null;
+
+                              _selectedTopicExample =
+                                  null;
+
+                              _isSelectingTopicCategory =
+                                  false;
+                            });
+                          },
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                          ),
+                          label: const Text(
+                            '自分で入力する',
+                          ),
+                        ),
+                     
+                      ] else ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _selectedTopicCategory ==
+                                        null
+                                    ? '自分で入力'
+                                    : '選択中：'
+                                        '$_selectedTopicCategory',
+                                style: const TextStyle(
+                                  fontWeight:
+                                      FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isSelectingTopicCategory =
+                                      true;
+                                });
+                              },
+                              child: const Text(
+                                '変更',
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        if (_selectedTopicCategory !=
+                            null) ...[
+                          const SizedBox(height: 12),
+
+                          const Text(
+                            '相談したい内容に近い例文を'
+                            '選んでください。',
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          RadioGroup<String>(
+                            groupValue:
+                                _selectedTopicExample,
+                            onChanged: (value) {
+                              if (value == null) {
+                                return;
+                              }
+
+                              setState(() {
+                                _selectedTopicExample =
+                                    value;
+
+                                _topicController.text =
+                                    value;
+                              });
+                            },
+                            child: Column(
+                              children: (
+                                _topicExamples[
+                                        _selectedTopicCategory] ??
+                                    const <String>[]
+                              )
+                                  .map(
+                                (example) {
+                                  return Card(
+                                    margin:
+                                        const EdgeInsets.only(
+                                      bottom: 8,
+                                    ),
+                                    child:
+                                        RadioListTile<String>(
+                                      value: example,
+                                      title: Text(
+                                        example,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets
+                                              .symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ).toList(),
+                            ),
+                          ),
+                        ],
+                      ],                     
+                     
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'あなたの内容に'
+                        '書き換えてください。',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      const Text(
+                        '［　］の部分を'
+                        '自分の内容に置き換えると、'
+                        'よりあなたに合った'
+                        '質問になります。',
+                      ),                     
+                     
+                      const SizedBox(height: 12),                    
+                    
                       TextFormField(
                         controller:
                             _topicController,
@@ -551,12 +860,69 @@ class _PromptAssistScreenState
                         ),
                       ),
                       const SizedBox(height: 8),
+                     
                       const Text(
-                        '回答するときに'
-                        '考慮してほしいことがあれば'
+                        '必要なものがあれば'
+                        '選んでください。'
+                        '複数選べます。',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      ..._conditionOptionInstructions.keys.map(
+                        (option) {
+                          return CheckboxListTile(
+                            value:
+                                _selectedConditionOptions
+                                    .contains(
+                              option,
+                            ),
+                            title: Text(
+                              option,
+                            ),
+                            contentPadding:
+                                EdgeInsets.zero,
+                            controlAffinity:
+                                ListTileControlAffinity
+                                    .leading,
+                            onChanged: (selected) {
+                              setState(() {
+                                if (selected == true) {
+                                  _selectedConditionOptions
+                                      .add(
+                                    option,
+                                  );
+                                } else {
+                                  _selectedConditionOptions
+                                      .remove(
+                                    option,
+                                  );
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      const Text(
+                        'その他の条件や希望',
+                        style: TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        '自分の事情や希望があれば'
                         '入力してください。',
                       ),
+
                       const SizedBox(height: 12),
+
                       TextFormField(
                         controller:
                             _conditionsController,

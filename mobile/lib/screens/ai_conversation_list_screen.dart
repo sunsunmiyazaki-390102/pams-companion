@@ -5,6 +5,7 @@ import '../models/ai_response_status.dart';
 import '../repositories/ai_conversation_repository.dart';
 
 import 'ai_conversation_detail_screen.dart';
+import 'ai_chat_screen.dart';
 
 class AiConversationListScreen
     extends StatefulWidget {
@@ -46,22 +47,40 @@ class _AiConversationListScreenState
   Future<void> _openConversationDetail(
     AiConversation conversation,
   ) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (context) =>
-            AiConversationDetailScreen(
-          conversation: conversation,
+    final shouldOpenAiChat =
+        conversation.responseStatus ==
+                AiResponseStatus.waiting ||
+            conversation.responseStatus ==
+                AiResponseStatus.received;
+
+    if (shouldOpenAiChat) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              AiChatScreen(
+            initialConversation:
+                conversation,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) =>
+              AiConversationDetailScreen(
+            conversation: conversation,
+          ),
+        ),
+      );
+    }
 
     if (!mounted) {
       return;
     }
 
     await _reload();
-  }
-
+  } 
+ 
   String _formatDateTime(
     DateTime dateTime,
   ) {

@@ -1116,8 +1116,10 @@ class _AiChatScreenState
                                 ),
                                 const SizedBox(height: 16),
 
-                                if (_currentConversation == null)
-                                  SizedBox(
+                                if (_currentConversation == null ||
+                                    _currentConversation?.responseStatus ==
+                                        AiResponseStatus.draft)
+                                  SizedBox(                               
                                     height: 48,
                                     child: FilledButton.icon(
                                       onPressed: _openPromptAssist,
@@ -1166,8 +1168,13 @@ class _AiChatScreenState
                                 TextFormField(
                                   controller:
                                       _questionController,
+                                  readOnly:
+                                      _currentConversation != null &&
+                                      _currentConversation!.responseStatus !=
+                                          AiResponseStatus.draft,
                                   minLines: 5,
-                                  maxLines: 12,
+                                  maxLines: 12,                                
+                                  
                                   decoration:
                                       const InputDecoration(
                                     hintText:

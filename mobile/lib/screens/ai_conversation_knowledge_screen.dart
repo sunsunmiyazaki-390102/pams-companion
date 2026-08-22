@@ -218,18 +218,21 @@ class _AiConversationKnowledgeScreenState
         }
       }
 
-      final reflectionQueue =
-          await _reflectionQueueRepository
-              .findByConversationId(
-        widget.conversation.conversationId,
-      );
-
-      if (reflectionQueue != null) {
-        await _reflectionQueueRepository
-            .updateStatus(
-          queueId: reflectionQueue.queueId,
-          status: ReflectionQueueStatus.completed,
+      if (!_isCandidateMode) {
+        final reflectionQueue =
+            await _reflectionQueueRepository
+                .findByConversationId(
+          widget.conversation.conversationId,
         );
+
+        if (reflectionQueue != null) {
+          await _reflectionQueueRepository
+              .updateStatus(
+            queueId: reflectionQueue.queueId,
+            status:
+                ReflectionQueueStatus.completed,
+          );
+        }
       }
 
       if (!mounted) {

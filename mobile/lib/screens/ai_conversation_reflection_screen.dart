@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/ai_conversation.dart';
+import '../models/ai_response_status.dart';
 import '../models/knowledge_candidate.dart';
 import '../models/knowledge_candidate_status.dart';
 import '../models/knowledge_type.dart';
 import '../models/new_question.dart';
 import '../models/new_question_status.dart';
+import '../models/reflection_queue_status.dart';
+import '../repositories/reflection_queue_repository.dart';
 import '../repositories/ai_conversation_repository.dart';
 import '../repositories/ai_session_repository.dart';
 import '../repositories/knowledge_asset_repository.dart';
@@ -51,6 +54,10 @@ class _AiConversationReflectionScreenState
   final NewQuestionRepository
       _newQuestionRepository =
       NewQuestionRepository();
+
+  final ReflectionQueueRepository
+      _reflectionQueueRepository =
+      ReflectionQueueRepository();
 
   final Uuid _uuid = const Uuid();
 
@@ -441,6 +448,9 @@ class _AiConversationReflectionScreenState
       aiResponse,
     );
 
+    _isKnowledgeCandidateReviewCompleted =
+        _parsedKnowledgeCandidates.isEmpty;
+
     _currentKnowledgeCandidateIndex = 0;
 
     final firstCandidate =
@@ -454,6 +464,9 @@ class _AiConversationReflectionScreenState
         _parseNewQuestions(
       aiResponse,
     );
+
+    _isNewQuestionReviewCompleted =
+        _parsedNewQuestions.isEmpty;
 
     _currentNewQuestionIndex = 0;
 
@@ -581,6 +594,49 @@ class _AiConversationReflectionScreenState
     }
   }
 
+  Future<void> _completeReflectionIfReady() async {
+    if (!_isKnowledgeCandidateReviewCompleted ||
+        !_isNewQuestionReviewCompleted) {
+      return;
+    }
+
+    await _conversationRepository
+        .updateResponseStatus(
+      conversationId:
+          widget.conversation.conversationId,
+      responseStatus:
+          AiResponseStatus.organized,
+    );
+
+    final updatedConversation =
+        await _conversationRepository.findById(
+      widget.conversation.conversationId,
+    );
+
+    if (updatedConversation == null ||
+        updatedConversation.responseStatus !=
+            AiResponseStatus.organized) {
+      throw StateError(
+        'AI相談の整理状態を更新できませんでした。',
+      );
+    }
+
+    final reflectionQueue =
+        await _reflectionQueueRepository
+            .findByConversationId(
+      widget.conversation.conversationId,
+    );
+
+    if (reflectionQueue != null) {
+      await _reflectionQueueRepository
+          .updateStatus(
+        queueId: reflectionQueue.queueId,
+        status:
+            ReflectionQueueStatus.completed,
+      );
+    }
+  }
+
   Future<void> _saveSummary() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -603,6 +659,10 @@ class _AiConversationReflectionScreenState
       return;
     }
 
+  
+  
+  
+  
     setState(() {
       _isSavingSummary = true;
     });
@@ -671,6 +731,7 @@ class _AiConversationReflectionScreenState
 
     if (nextIndex >=
         _parsedKnowledgeCandidates.length) {
+     
       setState(() {
         _isKnowledgeCandidateReviewCompleted =
             true;
@@ -679,7 +740,9 @@ class _AiConversationReflectionScreenState
         _candidateReasonController.clear();
       });
 
-      return;
+      _completeReflectionIfReady();
+
+      return;     
     }
 
     final nextCandidate =
@@ -814,6 +877,7 @@ class _AiConversationReflectionScreenState
 
     if (nextIndex >=
         _parsedNewQuestions.length) {
+    
       setState(() {
         _isNewQuestionReviewCompleted =
             true;
@@ -822,7 +886,9 @@ class _AiConversationReflectionScreenState
         _newQuestionReasonController.clear();
       });
 
-      return;
+      _completeReflectionIfReady();
+
+      return;    
     }
 
     final nextQuestion =

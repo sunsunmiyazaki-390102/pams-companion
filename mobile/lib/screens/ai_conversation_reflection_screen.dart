@@ -690,6 +690,12 @@ class _AiConversationReflectionScreenState
         return;
       }
 
+      await _completeReflectionIfReady();
+
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         _isSavingSummary = false;
       });
@@ -700,7 +706,7 @@ class _AiConversationReflectionScreenState
             '要約を保存しました。',
           ),
         ),
-      );
+      );     
     } catch (error) {
       if (!mounted) {
         return;

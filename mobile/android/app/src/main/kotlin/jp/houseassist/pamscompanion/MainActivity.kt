@@ -1,4 +1,4 @@
-package com.example.pams_companion
+package jp.houseassist.pamscompanion
 
 import io.flutter.embedding.android.FlutterActivity
 

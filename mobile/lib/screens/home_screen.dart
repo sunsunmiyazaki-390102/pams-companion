@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'about_pams_screen.dart';
 import 'ai_think_screen.dart';
+import 'data_management_screen.dart';
 import 'knowledge_grow_screen.dart';
 import 'memory_screen.dart';
 import 'theme_screen.dart';
@@ -112,6 +113,22 @@ class HomeScreen extends StatelessWidget {
                 _openScreen(
                   context,
                   const ThemeScreen(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            _HomeMenuCard(
+              label: 'データ管理',
+              description:
+                  'データのバックアップや'
+                  '復元を行います。',
+              icon: Icons.storage_outlined,
+              onPressed: () {
+                _openScreen(
+                  context,
+                  const DataManagementScreen(),
                 );
               },
             ),

@@ -3,11 +3,9 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 class PurchaseService {
   PurchaseService();
 
-  static const String fullProductId =
-      'pams_companion_full';
+  static const String fullProductId = 'pams_companion_full';
 
-  final InAppPurchase _inAppPurchase =
-      InAppPurchase.instance;
+  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
 
   Stream<List<PurchaseDetails>> get purchaseStream {
     return _inAppPurchase.purchaseStream;
@@ -18,12 +16,7 @@ class PurchaseService {
   }
 
   Future<ProductDetails?> loadFullProduct() async {
-    final response =
-        await _inAppPurchase.queryProductDetails(
-      {
-        fullProductId,
-      },
-    );
+    final response = await _inAppPurchase.queryProductDetails({fullProductId});
 
     if (response.error != null) {
       throw StateError(
@@ -39,33 +32,21 @@ class PurchaseService {
     return response.productDetails.first;
   }
 
-  Future<bool> buyFullProduct(
-    ProductDetails productDetails,
-  ) async {
-    final purchaseParam =
-        PurchaseParam(
-      productDetails: productDetails,
-    );
+  Future<bool> buyFullProduct(ProductDetails productDetails) async {
+    final purchaseParam = PurchaseParam(productDetails: productDetails);
 
-    return _inAppPurchase.buyNonConsumable(
-      purchaseParam: purchaseParam,
-    );
+    return _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
   }
 
   Future<void> restorePurchases() async {
     await _inAppPurchase.restorePurchases();
   }
 
-  Future<void> completePurchase(
-    PurchaseDetails purchaseDetails,
-  ) async {
+  Future<void> completePurchase(PurchaseDetails purchaseDetails) async {
     if (!purchaseDetails.pendingCompletePurchase) {
       return;
     }
 
-    await _inAppPurchase.completePurchase(
-      purchaseDetails,
-    );
+    await _inAppPurchase.completePurchase(purchaseDetails);
   }
 }
-

@@ -3,35 +3,25 @@ import 'package:flutter/material.dart';
 import 'about_pams_screen.dart';
 import 'ai_think_screen.dart';
 import 'data_management_screen.dart';
-import 'knowledge_grow_screen.dart';
 import 'memory_screen.dart';
 import 'theme_screen.dart';
+import 'premium_feature_lock_screen.dart';
+import '../services/entitlement_service.dart';
+import 'knowledge_grow_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({
-    super.key,
-  });
+  const HomeScreen({super.key});
 
-  void _openScreen(
-    BuildContext context,
-    Widget screen,
-  ) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => screen,
-      ),
-    );
+  void _openScreen(BuildContext context, Widget screen) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => screen));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'PAMS Companion',
-        ),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('PAMS Companion'), centerTitle: true),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),
@@ -39,10 +29,7 @@ class HomeScreen extends StatelessWidget {
             const Text(
               '今日は何をしますか？',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
@@ -62,10 +49,7 @@ class HomeScreen extends StatelessWidget {
                   '育てた知を振り返ります。',
               icon: Icons.today_outlined,
               onPressed: () {
-                _openScreen(
-                  context,
-                  const MemoryScreen(),
-                );
+                _openScreen(context, const MemoryScreen());
               },
             ),
 
@@ -78,10 +62,7 @@ class HomeScreen extends StatelessWidget {
                   'これまでの対話を振り返ることができます。',
               icon: Icons.chat_bubble_outline,
               onPressed: () {
-                _openScreen(
-                  context,
-                  const AiThinkScreen(),
-                );
+                _openScreen(context, const AiThinkScreen());
               },
             ),
 
@@ -93,10 +74,23 @@ class HomeScreen extends StatelessWidget {
                   '残した対話を振り返り、'
                   '大切なものを自分の知へ育てます。',
               icon: Icons.eco_outlined,
+
               onPressed: () {
+                final entitlementService = EntitlementService.instance;
+
+                if (entitlementService.isFullVersion) {
+                  _openScreen(context, const KnowledgeGrowScreen());
+                  return;
+                }
+
                 _openScreen(
                   context,
-                  const KnowledgeGrowScreen(),
+                  const PremiumFeatureLockScreen(
+                    featureTitle: '知を育てる',
+                    description:
+                        '残したAIとの対話を整理し、'
+                        '大切なものを自分の知へ育てる機能です。',
+                  ),
                 );
               },
             ),
@@ -110,10 +104,7 @@ class HomeScreen extends StatelessWidget {
                   'まとめて振り返ります。',
               icon: Icons.folder_outlined,
               onPressed: () {
-                _openScreen(
-                  context,
-                  const ThemeScreen(),
-                );
+                _openScreen(context, const ThemeScreen());
               },
             ),
 
@@ -126,10 +117,7 @@ class HomeScreen extends StatelessWidget {
                   '復元を行います。',
               icon: Icons.storage_outlined,
               onPressed: () {
-                _openScreen(
-                  context,
-                  const DataManagementScreen(),
-                );
+                _openScreen(context, const DataManagementScreen());
               },
             ),
 
@@ -142,10 +130,7 @@ class HomeScreen extends StatelessWidget {
                   '使い方を確認します。',
               icon: Icons.info_outline,
               onPressed: () {
-                _openScreen(
-                  context,
-                  const AboutPamsScreen(),
-                );
+                _openScreen(context, const AboutPamsScreen());
               },
             ),
 
@@ -180,43 +165,32 @@ class _HomeMenuCard extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              CircleAvatar(
-                child: Icon(
-                  icon,
-                  size: 26,
-                ),
-              ),
+              CircleAvatar(child: Icon(icon, size: 26)),
 
               const SizedBox(width: 16),
 
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       label,
                       style: const TextStyle(
                         fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
 
                     const SizedBox(height: 6),
 
-                    Text(
-                      description,
-                    ),
+                    Text(description),
                   ],
                 ),
               ),
 
               const SizedBox(width: 12),
 
-              const Icon(
-                Icons.chevron_right,
-              ),
+              const Icon(Icons.chevron_right),
             ],
           ),
         ),

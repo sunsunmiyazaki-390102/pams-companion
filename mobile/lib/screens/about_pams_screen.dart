@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/entitlement_service.dart';
+
 
 class AboutPamsScreen extends StatelessWidget {
   const AboutPamsScreen({
@@ -216,10 +218,7 @@ class AboutPamsScreen extends StatelessWidget {
                   value: 'PAMS Companion',
                 ),
                 Divider(height: 28),
-                _AboutInfoRow(
-                  label: 'Version',
-                  value: '1.0.0',
-                ),
+                _ReviewVersionRow(),
               ],
             ),
 
@@ -337,6 +336,96 @@ class _AboutInfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ReviewVersionRow extends StatelessWidget {
+  const _ReviewVersionRow();
+  Future<void> _showReviewAccessDialog(
+    BuildContext context,
+  ) async {
+    String reviewCode = '';
+
+    final isApproved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            'アクセスコード',
+          ),
+          content: TextField(
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'コード',
+            ),
+            onChanged: (value) {
+              reviewCode = value;
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text(
+                'キャンセル',
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(
+                  reviewCode.trim() == 'PAMS-REVIEW-2026',
+                );
+              },
+              child: const Text(
+                '確認',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (isApproved == true) {
+      EntitlementService.instance.enableReviewAccess();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'フル機能を有効にしました。',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (isApproved == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'アクセスコードが正しくありません。',
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: () {    
+        _showReviewAccessDialog(context);
+      },
+      child: const _AboutInfoRow(
+        label: 'Version',
+        value: '1.0.0',
+      ),
     );
   }
 }

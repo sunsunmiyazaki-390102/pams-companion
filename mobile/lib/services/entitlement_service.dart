@@ -10,6 +10,13 @@ class EntitlementService extends ChangeNotifier {
 
   bool _isFullVersion = false;
 
+  void enableReviewAccess() {
+    if (!_isFullVersion) {
+      _isFullVersion = true;
+      notifyListeners();
+    }
+  }
+
   bool get isFullVersion => _isFullVersion;
 
   bool applyPurchase(PurchaseDetails purchaseDetails) {
